@@ -1,0 +1,7 @@
+license.dat
+.vscode
+*.pyc
+*.log
+*~
+*~~
+.DS_Store
