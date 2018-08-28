@@ -30,10 +30,10 @@ Use the **Installation Link** or the deployment code itself:
 
 ```sh
 # Use the whole url
-$ python3 logmein-host/logmein-host.py --deployment-code 'https://secure.logmein.com/i?l=en&c=01_bma2ecmmg4coyxou9oo6yhhvw0ewi3estniee'
+$ python3 logmein_host/logmein_host.py --deployment-code 'https://secure.logmein.com/i?l=en&c=01_bma2ecmmg4coyxou9oo6yhhvw0ewi3estniee'
 
 # or just the code
-$ python3 logmein-host/logmein-host.py --deployment-code "01_bma2ecmmg4coyxou9oo6yhhvw0ewi3estniee"
+$ python3 logmein_host/logmein_host.py --deployment-code "01_bma2ecmmg4coyxou9oo6yhhvw0ewi3estniee"
 ```
 
 ### Running the host
@@ -43,10 +43,10 @@ Run `pytty`, the web terminal app that will connect to the localhost using *ssh*
 $ python3 pytty/pytty.py &
 ```
 
-Then run `logmein-host` which connects `pytty` to the LogMeIn gateways:
+Then run `logmein_host` which connects `pytty` to the LogMeIn gateways:
 
 ```sh
-$ python3 logmein-host/logmein_host.py 
+$ python3 logmein_host/logmein_host.py 
 ```
 
 ### License

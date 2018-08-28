@@ -1,0 +1,40 @@
+name: hello-janoskk # you probably want to 'snapcraft register <name>'
+version: '1.0' # just for humans, typically '1.2+git' or '1.3.2'
+summary: Hello, World! # 79 char long summary
+description: |
+  This is my-snap's description. You have a paragraph or two to tell the
+  most important story about your snap. Keep it under 100 words though,
+  we live in tweetspace and your description wants to look good in the snap
+  store.
+
+grade: stable # must be 'stable' to release into candidate/stable channels
+confinement: strict # use 'strict' once you have the right plugs and slots
+
+parts:
+  pytty:
+    plugin: python
+    source: .
+    requirements: requirements.txt
+    # override-build: |
+    #   mkdir -p $SNAPCRAFT_PART_INSTALL/snap
+    #   cp -r pytty logmein-host $SNAPCRAFT_PART_INSTALL/snap/
+    #   python3 -m compileall $SNAPCRAFT_PART_INSTALL/snap/pytty
+    #   python3 -m compileall $SNAPCRAFT_PART_INSTALL/snap/logmein-host
+
+apps:
+  pytty:
+    command: pytty
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - network
+      - network-bind
+      - process-control
+  logmein-host:
+    command: logmein_host
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - network
+      - network-bind
+      - process-control
