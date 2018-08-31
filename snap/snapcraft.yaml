@@ -15,11 +15,7 @@ parts:
     plugin: python
     source: .
     requirements: requirements.txt
-    # override-build: |
-    #   mkdir -p $SNAPCRAFT_PART_INSTALL/snap
-    #   cp -r pytty logmein-host $SNAPCRAFT_PART_INSTALL/snap/
-    #   python3 -m compileall $SNAPCRAFT_PART_INSTALL/snap/pytty
-    #   python3 -m compileall $SNAPCRAFT_PART_INSTALL/snap/logmein-host
+    stage-packages: [ openssh-client ]
 
 apps:
   pytty:
