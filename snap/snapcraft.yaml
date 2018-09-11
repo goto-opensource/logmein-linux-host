@@ -7,7 +7,7 @@ description: |-
 
  You can connect to a Linux host, in an web-based secure shell and it allows you to send commands to the host computer.
 
- For more information on LogMeIn for Linux and how to attach your host to your subscription, please refer to the developer website.
+ For more information on LogMeIn for Linux and how to attach your host to your account, try the developer website.
 
 grade: stable # must be 'stable' to release into candidate/stable channels
 confinement: strict # use 'strict' once you have the right plugs and slots
