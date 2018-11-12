@@ -5,3 +5,9 @@ license.dat
 *~
 *~~
 .DS_Store
+env/
+*.snap
+prime/
+parts/
+stage/
+.snapcraft/

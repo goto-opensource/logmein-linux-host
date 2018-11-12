@@ -155,7 +155,7 @@ def syslog_handle_exception(exc_type, exc_value, exc_traceback):
     """Redefine to log with our logger instead of printing to the sys.stderr"""
     logging.exception("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
-def main():
+def main_func():
     # Switch off tornado's builtin logging
     tornado.options.options.logging = None
     tornado.options.parse_command_line()
@@ -171,4 +171,4 @@ def main():
     tornado.ioloop.IOLoop.current().start()
 
 if __name__ == "__main__":
-    main()
+    main_func()

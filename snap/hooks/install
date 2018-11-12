@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+snapctl set "deploy-code=none"

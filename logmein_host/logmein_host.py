@@ -133,10 +133,16 @@ class Config(object):
             try:
                 with open("license.dat", "r") as f:
                     config = cipher.decrypt(f.read())
-                    log.debug("config: %s" % config)
+                    log.debug("local config: %s" % config)
             except FileNotFoundError:
-                print("License file not found! Please register first.")
-                sys.exit(1)
+                try:
+                    with open(self.globalLicenseFile, "r") as f:
+                        config = cipher.decrypt(f.read())
+                        log.debug("global config: %s" % config)
+                except FileNotFoundError:
+                    print("License file not found! Please register first.")
+                    sys.exit(1)
+
         for line in config.splitlines():
             if line.startswith("AUTHCODE:"):
                 self.authCode = line[9:9+64]
@@ -553,7 +559,7 @@ class Register(object):
             if message.startswith("OK"):
                 print("Success")
                 self.__saveLicenseFile(message + "HOMESITE:{}\r\n".format(self.config.homeSite))
-                sys.exit(0)
+                return 0
             elif message.startswith("ERROR:31\r"):
                 print("Deployment code is expired or already registered.\n"
                     "Please create a new one at https://{}/Deployment/ManageDeployments.aspx".format(self.config.homeSite))
@@ -564,7 +570,7 @@ class Register(object):
                 print(message)
         else:
             print("Error during getting deploy info: {}".format(status))
-        sys.exit(1)
+        return 1
 
     def __saveLicenseFile(self, data: str):
         if os.getuid() == 0:
@@ -601,7 +607,7 @@ def syslog_handle_exception(exc_type, exc_value, exc_traceback):
     """Redefine to log with our logger instead of printing to the sys.stderr"""
     log.exception("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
-if __name__ == "__main__":
+def main():
     config = Config()
     parser = ArgumentParser(description='Access Linux hosts from LogMeIn Central')
     parser.add_argument('--deployment-code', type=str,
@@ -620,7 +626,10 @@ if __name__ == "__main__":
 
     if args.deployment_code:
         register = Register(config, args.deployment_code)
-        register.hostRegister()
+        sys.exit(register.hostRegister())
     else:
         config.parseLicenseFile(args.stdin)
         Host.runForever(config)
+
+if __name__ == "__main__":
+    main()
