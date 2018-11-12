@@ -36,6 +36,7 @@ def main():
     licensePath = os.getenv("SNAP_COMMON", "/var/lib/logmein-host")
     licenseFile = "{}/license.dat".format(licensePath)
     config.globalLicenseFile = os.getenv("LICENSE_FILE", licenseFile)
+    config.osSpec = 987168779
 
     p = subprocess.Popen(["snapctl", "get", "deploy-code"], stdout=subprocess.PIPE)
     deploy_code = p.stdout.read().decode().rstrip()
@@ -43,8 +44,6 @@ def main():
 
     if retval != 0:
         sys.exit(retval)
-
-    logging.info("Deploy code: \"{}\"".format(deploy_code))
 
     if deploy_code == "" or deploy_code == "none":
         logging.error("Generate an Installation Link and configure first. Further info:")
