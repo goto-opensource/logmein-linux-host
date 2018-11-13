@@ -70,6 +70,8 @@ class Config(object):
         self.globalHostIdFile = "/data/{0}.hostid".format(gethostname())
         self.authCode = ""
         self.licenseID = ""
+        self.osType = 0x1000004
+        self.osSpec = 987168778
 
         self.verifyConfig()
 
@@ -250,9 +252,6 @@ class Host(object):
 
         self.control_ssl.connect((self.gateway, 443))
 
-        osType = 0x1000004
-        osSpec = 987168778
-
         message = REQ_MSG_AUTH.format(self.config.compoundHostID(), 
             self.config.authCode, 
             self.config.hostName, 
@@ -261,8 +260,8 @@ class Host(object):
             self.config.versionStr(), 
             self.config.uniqueHostId(), 
             self.config.lastBootTime(), 
-            osType, 
-            osSpec)
+            self.config.osType, 
+            self.config.osSpec)
         log.debug("Sending %s" % message)
         with self.control_lock:
             self.control_ssl.write(message.encode())
