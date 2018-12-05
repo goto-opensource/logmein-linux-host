@@ -2,6 +2,7 @@ name: logmein-host
 version: '1.0' # just for humans, typically '1.2+git' or '1.3.2'
 summary: The LogMeIn Host Software (Beta) for Linux # 79 char long summary
 icon: snap/gui/icon.png
+base: core18
 description: |-
  LogMeIn allows you to access your computers from any device.
 
@@ -18,6 +19,31 @@ parts:
     source: .
     requirements: requirements.txt
     stage-packages: [ openssh-client ]
+  novnc:
+    plugin: dump
+    source: https://github.com/novnc/noVNC/archive/v1.0.0.tar.gz
+    organize:
+      '*': noVNC/
+  novnc-branding:
+    plugin: dump
+    source: ./remctrl/noVNC-branding
+    organize:
+      '*': noVNC-branding/
+  websockify:
+    plugin: nil
+    stage-packages: 
+      - websockify
+      - python-websockify
+      - python-setuptools
+      - python-numpy
+      - python-openssl
+      - openssl 
+      - net-tools
+    organize:
+      usr/bin/python2-websockify: usr/bin/websockify
+  x11vnc:
+    plugin: nil
+    stage-packages: [ x11vnc ]
 
 apps:
   pytty:
@@ -36,3 +62,29 @@ apps:
       - network
       - network-bind
       - process-control
+  novnc:
+    command: noVNC/utils/launch.sh --vnc localhost:23823 --listen 23822 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
+    daemon: simple
+    restart-condition: always
+    plugs:
+      - network
+      - network-bind
+      - process-control
+  logmein-vnc:
+    command: x11vnc -norc -forever -localhost -usepw -autoport 23823
+    plugs:
+      - network
+      - network-bind
+      # - process-control
+      # - unity7
+      # - home
+      # - opengl
+      # - pulseaudio
+      # - mount-observe
+      # - optical-drive
+      # - camera
+      # - removable-media
+      # - screen-inhibit-control
+      - x11
+      # - desktop
+      # - desktop-legacy

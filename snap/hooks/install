@@ -1,3 +1,8 @@
 #!/bin/sh -e
 
 snapctl set "deploy-code=none"
+
+if [ ! -f "${SNAP_COMMON}/self.pem" ]; then
+    openssl req -new -x509 -days 3650 -nodes -out "${SNAP_COMMON}/self.pem" \
+        -keyout "${SNAP_COMMON}/self.pem" -subj '/CN=www.mydom.com/O=My Company Name LTD./C=US'
+fi

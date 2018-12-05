@@ -59,7 +59,10 @@ class Config(object):
         self.globalLicenseFile = os.getenv("LICENSE_FILE", "/var/lib/logmein-host/license.dat")
 
         # Default port of the web terminal
-        self.port = os.getenv("TERM_PORT", 23821)
+        self.termPort = os.getenv("TERM_PORT", 23821)
+
+        # Default port of the remote control
+        self.rcPort = os.getenv("RC_PORT", 23822)
 
         # Misc
         self.hostName = gethostname()
@@ -97,17 +100,25 @@ class Config(object):
 
     def welcomePage(self, raSid : str) -> bytes: 
         """ First page that will be served by logmein-host, all other request will be forwarded """
-        return (
-            "HTTP/1.1 200 OK\r\n" +
-            "Content-Type: text/html\r\n" +
-            "Set-Cookie: RASID=" + raSid + "; expires=Wed, 21-Mar-2030 17:01:54 GMT; path=/; domain=" + self.homeSiteTld() +"\r\n" +
-            "\r\n" +
+        pageContent = (
             "<!DOCTYPE html>\r\n" +
             "<html>\r\n" +
             "<head>\r\n" +
             "<meta http-equiv=\"refresh\" content=\"0; URL=/term/\">\r\n" +
             "</head>\r\n" +
             "</html>\r\n"
+        )
+        customFile = os.path.join(os.path.dirname(__file__), "static", "index.html")
+        with suppress(Exception):
+            with open(customFile, "r") as f:
+                pageContent = f.read()
+         
+        return (
+            "HTTP/1.1 200 OK\r\n" +
+            "Content-Type: text/html\r\n" +
+            "Set-Cookie: RASID=" + raSid + "; expires=Wed, 21-Mar-2030 17:01:54 GMT; path=/; domain=" + self.homeSiteTld() +"\r\n" +
+            "\r\n" +
+            pageContent
         ).encode()
 
     def lastBootTime(self) -> str:
@@ -389,7 +400,7 @@ class Host(object):
 
     def __createResponse(self, request, client_ssl):
         fwdSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        fwdSock.connect(("127.0.0.1", int(self.config.port)))
+        fwdSock.connect(("127.0.0.1", int(self.config.rcPort)))
 
         # forwarding request
         fwdSock.sendall(request)

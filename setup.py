@@ -11,7 +11,7 @@ setup(
     keywords = "",
     url = "http://repository.services.logmein.com/linux/",
     packages=['logmein_host', 'pytty'],
-    package_data={'pytty': ['templates/*', 'static/*']},
+    package_data={'logmein_host': ['static/*'], 'pytty': ['templates/*', 'static/*']},
     include_package_data=True,
     long_description=(""),
     entry_points={
