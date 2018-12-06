@@ -104,7 +104,7 @@ class Config(object):
             "<!DOCTYPE html>\r\n" +
             "<html>\r\n" +
             "<head>\r\n" +
-            "<meta http-equiv=\"refresh\" content=\"0; URL=/term/\">\r\n" +
+            "<meta http-equiv=\"refresh\" content=\"0; URL=/index.html\">\r\n" +
             "</head>\r\n" +
             "</html>\r\n"
         )
@@ -398,9 +398,9 @@ class Host(object):
         clientSocket.close()
         targetHostSocket.close()
 
-    def __createResponse(self, request, client_ssl):
+    def __createResponse(self, request, client_ssl, port):
         fwdSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        fwdSock.connect(("127.0.0.1", int(self.config.rcPort)))
+        fwdSock.connect(("127.0.0.1", int(port)))
 
         # forwarding request
         fwdSock.sendall(request)
@@ -473,8 +473,12 @@ class Host(object):
                     log.info("Error during sending response: %d" % e.errno)
                     client_ssl.close()
                 return
+            # elif firstPart.startswith("GET /term"):
+            #     self.__createResponse(request, client_ssl, self.config.termPort)
+            #     client_ssl.close()
+            #     return
             else:
-                self.__createResponse(request, client_ssl)
+                self.__createResponse(request, client_ssl, self.config.rcPort)
                 client_ssl.close()
                 return     
 

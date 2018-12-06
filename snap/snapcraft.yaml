@@ -71,7 +71,7 @@ apps:
       - network-bind
       - process-control
   logmein-vnc:
-    command: x11vnc -norc -forever -localhost -usepw -autoport 23823
+    command: while 1; do x11vnc -norc -forever -localhost -usepw -autoport 23823; done
     plugs:
       - network
       - network-bind

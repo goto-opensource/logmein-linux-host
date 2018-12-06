@@ -55,7 +55,7 @@ var updater = {
         if (location.protocol === "https:") {
             url = "wss:";
         }
-        url += "//" + location.host + "/termsocket";
+        url += "//" + location.host + "/term/termsocket";
         updater.socket = new WebSocket(url);
         updater.socket.binaryType = "arraybuffer";
 
