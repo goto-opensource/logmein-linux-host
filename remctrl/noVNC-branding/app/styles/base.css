@@ -310,7 +310,7 @@ select:active {
 
   transition: 0.5s ease-in-out;
 
-  background-color: rgb(110, 132, 163);
+  background-color: #165c7d;
   border-radius: 0 10px 10px 0;
 
 }
@@ -526,7 +526,7 @@ select:active {
 }
 
 .noVNC_panel .noVNC_heading {
-  background-color: rgb(110, 132, 163);
+  background-color: #165c7d;
   border-radius: 5px;
   padding: 5px;
   /* Compensate for padding in image */
@@ -751,7 +751,7 @@ select:active {
   padding: 10px;
 
   color: white;
-  background-color: rgb(110, 132, 163);
+  background-color: #165c7d;
   border-radius: 12px;
 
   text-align: center;
@@ -765,7 +765,7 @@ select:active {
   border: 1px solid rgb(83, 99, 122);
   border-bottom-width: 2px;
   border-radius: 5px;
-  background: linear-gradient(to top, rgb(110, 132, 163), rgb(99, 119, 147));
+  background: linear-gradient(to top, #165c7d, #124d69);
 
   /* This avoids it jumping around when :active */
   vertical-align: middle;
@@ -775,7 +775,7 @@ select:active {
   margin-top: 3px;
 }
 :root:not(.noVNC_touch) #noVNC_connect_button div:hover {
-  background: linear-gradient(to top, rgb(110, 132, 163), rgb(105, 125, 155));
+  background: linear-gradient(to top, #165c7d, #19688e;
 }
 
 #noVNC_connect_button img {
