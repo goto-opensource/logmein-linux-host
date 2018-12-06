@@ -39,23 +39,8 @@
             text-align: center;
         }
         .image{
-            width: 20%;
-            margin-bottom: 1px;
-        }     
-        .image {
-            -webkit-transition: all 0.5s ease; /* Safari and Chrome */
-            -moz-transition: all 0.5s ease; /* Firefox */
-            -ms-transition: all 0.5s ease; /* IE 9 */
-            -o-transition: all 0.5s ease; /* Opera */
-            transition: all 0.5s ease;
-        }
-        .image:hover {
-            -webkit-transform:scale(1.5); /* Safari and Chrome */
-            -moz-transform:scale(1.5); /* Firefox */
-            -ms-transform:scale(1.5); /* IE 9 */
-            -o-transform:scale(1.5); /* Opera */
-            transform:scale(1.5);
-        }   
+            width: 100%;
+        } 
         .ssh, .rc {
             text-align: center;
             display: block;
@@ -81,19 +66,60 @@
             background: -ms-linear-gradient(-35deg, rgba(22, 92, 125, 1) 50%, rgba(51, 55, 73, 1) 0%);
             background: -o-linear-gradient(-35deg, rgba(22, 92, 125, 1) 50%, rgba(51, 55, 73, 1) 0%);
         }
+
+        /* Shine */
+        figure {
+            width: 20%;
+            overflow: hidden;
+            margin-left: auto;
+            margin-right: auto;
+            margin: auto;
+        }
+
+        .hover14 figure {
+            position: relative;
+        }
+        .hover14 figure::before {
+            position: absolute;
+            top: 0;
+            left: -75%;
+            z-index: 2;
+            display: block;
+            content: '';
+            width: 50%;
+            height: 100%;
+            background: -webkit-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,.3) 100%);
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,.3) 100%);
+            -webkit-transform: skewX(-25deg);
+            transform: skewX(-25deg);
+        }
+        .hover14 figure:hover::before {
+            -webkit-animation: shine 1s;
+            animation: shine 1s;
+        }
+        @-webkit-keyframes shine {
+            100% {
+                left: 125%;
+            }
+        }
+        @keyframes shine {
+            100% {
+                left: 125%;
+            }
+        }
     </style>
 
     <div class="container">
         <div class="row vertical-center">
-            <div class="col-sm ssh">
+            <div class="col-sm ssh hover14">
                 <a href="/term/">
-                    <img src="SSH.png" class="image"><br>
+                    <figure><img src="SSH.png" class="image"><br></figure>
                     <span class="caption">SSH</span>
                 </a>
             </div>
-            <div class="col-sm rc">
+            <div class="col-sm rc hover14">
                 <a href="/vnc.html?resize=scale&encrypt=1">
-                    <img src="RC.png" class="image"><br>
+                    <figure><img src="RC.png" class="image"><br></figure>
                     <span class="caption">Remote Control</span>
                 </a>
             </div>
