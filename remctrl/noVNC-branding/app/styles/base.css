@@ -775,7 +775,7 @@ select:active {
   margin-top: 3px;
 }
 :root:not(.noVNC_touch) #noVNC_connect_button div:hover {
-  background: linear-gradient(to top, #165c7d, #19688e;
+  background: linear-gradient(to top, #165c7d, #19688e);
 }
 
 #noVNC_connect_button img {
