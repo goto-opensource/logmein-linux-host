@@ -100,7 +100,7 @@ class Config(object):
         return (
             "HTTP/1.1 200 OK\r\n" +
             "Content-Type: text/html\r\n" +
-            "Set-Cookie: RASID=" + raSid + "; expires=Wed, 21-Mar-2030 17:01:54 GMT; path=/; domain=" + self.homeSiteTld() +"\r\n" +
+            "Set-Cookie: RASID=" + raSid + "; path=/\r\n" +
             "\r\n" +
             "<!DOCTYPE html>\r\n" +
             "<html>\r\n" +
