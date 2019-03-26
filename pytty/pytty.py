@@ -64,11 +64,12 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/term/", MainHandler),
             (r"/termsocket", TermSocketHandler),
+            (r'/term/static/(.*)', tornado.web.StaticFileHandler, {'path': os.path.join(os.path.dirname(__file__), "static")}),
         ]
         settings = dict(
             cookie_secret=hexlify(os.urandom(40)).decode(),
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
-            static_path=os.path.join(os.path.dirname(__file__), "static"),
+            #static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
             websocket_ping_interval=3,
             websocket_ping_timeout=7,
