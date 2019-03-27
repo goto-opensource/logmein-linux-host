@@ -64,9 +64,7 @@ class Application(tornado.web.Application):
         handlers = [
             (r"/term/", MainHandler),
             (r"/term/termsocket", TermSocketHandler),
-            (r"/term/static/(.*)", tornado.web.StaticFileHandler, 
-                {'path': os.path.join(os.path.dirname(__file__), "static")}
-            )
+            (r'/term/static/(.*)', tornado.web.StaticFileHandler, {'path': os.path.join(os.path.dirname(__file__), "static")}),
         ]
         settings = dict(
             cookie_secret=hexlify(os.urandom(40)).decode(),

@@ -11,3 +11,4 @@ prime/
 parts/
 stage/
 .snapcraft/
+node_modules

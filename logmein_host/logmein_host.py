@@ -58,11 +58,8 @@ class Config(object):
         # License file path
         self.globalLicenseFile = os.getenv("LICENSE_FILE", "/var/lib/logmein-host/license.dat")
 
-        # Default port of the web terminal
-        self.termPort = os.getenv("TERM_PORT", 23821)
-
-        # Default port of the remote control
-        self.rcPort = os.getenv("RC_PORT", 23822)
+        # Default port of the web terminal/reverse proxy
+        self.port = os.getenv("TERM_PORT", 23820)
 
         # Misc
         self.hostName = gethostname()
@@ -97,29 +94,6 @@ class Config(object):
     def compoundHostID(self) -> str:
         """ Compound host id """
         return self.licenseID + "/" + self.hostName
-
-    def welcomePage(self, raSid : str) -> bytes: 
-        """ First page that will be served by logmein-host, all other request will be forwarded """
-        pageContent = (
-            "<!DOCTYPE html>\r\n" +
-            "<html>\r\n" +
-            "<head>\r\n" +
-            "<meta http-equiv=\"refresh\" content=\"0; URL=/index.html\">\r\n" +
-            "</head>\r\n" +
-            "</html>\r\n"
-        )
-        customFile = os.path.join(os.path.dirname(__file__), "static", "index.html")
-        with suppress(Exception):
-            with open(customFile, "r") as f:
-                pageContent = f.read()
-         
-        return (
-            "HTTP/1.1 200 OK\r\n" +
-            "Content-Type: text/html\r\n" +
-            "Set-Cookie: RASID=" + raSid + "; expires=Wed, 21-Mar-2030 17:01:54 GMT; path=/; domain=" + self.homeSiteTld() +"\r\n" +
-            "\r\n" +
-            pageContent
-        ).encode()
 
     def lastBootTime(self) -> str:
         """ Last boot time (to be implemented....)
@@ -338,7 +312,13 @@ class Host(object):
         clientData = b""
         targetHostData = b""
         terminate = False
-        while not terminate:
+        clientFromCount = 0
+        targetFromCount = 0
+        clientToCount = 0
+        targetToCount = 0
+
+        while not terminate or len(clientData) > 0 or len(targetHostData) > 0:
+            log.debug("---------------------")
             inputs = [clientSocket, targetHostSocket]
             outputs = []
             
@@ -361,9 +341,13 @@ class Host(object):
                         if data != None:
                             if len(data) > 0:
                                 targetHostData += data
-                                log.debug("Read {} bytes data from CLIENT".format(len(data)))
+                                clientFromCount += len(data)
+                                log.debug(f"Read {len(data)} bytes data from CLIENT. Total: {clientFromCount}")
+                                with suppress(Exception):
+                                    log.debug("Request: %s[...]" % data.decode()[:65])
                             else:
                                 terminate = True
+                                log.debug("terminating B")
                     except Exception as e:
                         log.debug("exchangeData B {}".format(e))
                         break
@@ -373,40 +357,42 @@ class Host(object):
                         if data != None:
                             if len(data) > 0:
                                 clientData += data
-                                log.debug("Read {} bytes data from HOST".format(len(data)))
+                                targetFromCount += len(data)
+                                log.debug(f"Read {len(data)} bytes data from HOST. Total: {targetFromCount}")
                             else:
                                 terminate = True
+                                log.debug("terminating C")
                     except Exception as e:
                         log.debug("exchangeData C {}".format(e))
                         break
                                             
             for out in outputsReady:
+                log.debug(f"out: {out} clientData: {len(clientData)} targetData: {len(targetHostData)}")
                 if out == clientSocket and len(clientData) > 0:
                     try:
                         bytesWritten = clientSocket.send(clientData)
-                        log.debug("Sent {} bytes data to CLIENT".format(bytesWritten))
+                        clientToCount += bytesWritten
+                        log.debug(f"Sent {bytesWritten} bytes data to CLIENT. Total: {clientToCount}")
                         if bytesWritten > 0:
                             clientData = clientData[bytesWritten:]
                     except ssl.SSLWantWriteError:
                         pass
                 elif out == targetHostSocket and len(targetHostData) > 0:
                     bytesWritten = targetHostSocket.send(targetHostData)
-                    log.debug("Sent {} bytes data to HOST".format(bytesWritten))
+                    targetToCount += bytesWritten
+                    log.debug(f"Sent {bytesWritten} bytes data to HOST. Total: {targetToCount}")
                     if bytesWritten > 0:
                         targetHostData = targetHostData[bytesWritten:]
         
-        clientSocket.close()
-        targetHostSocket.close()
+        if len(targetHostData) > 0:
+            clientSocket.sendall(targetHostData)
+            log.debug("Sent all remaining data to HOST.")
+    
+        if len(clientData) > 0:
+            clientSocket.sendall(clientData)
+            log.debug("Sent all remaining data to CLIENT.")
 
-    def __createResponse(self, request, client_ssl, port):
-        fwdSock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        fwdSock.connect(("127.0.0.1", int(port)))
-
-        # forwarding request
-        fwdSock.sendall(request)
-
-        # exchanging requests/responses until the connection is closed
-        self.__exchangeData(client_ssl, fwdSock)
+        log.debug("Exiting thread")
 
     def __handleDataSock(self, data):
         REQ_MSG_DATASOCK = (
@@ -433,54 +419,17 @@ class Host(object):
         client_ssl.connect((self.gateway, 443))
 
         # send datasock request
-        client_ssl.send(message.encode())
+        client_ssl.sendall(message.encode())
 
-        while 1:
-            chunks = []
-            bytes_recv = 1024
-            while bytes_recv == 1024:
-                try:
-                    chunk = client_ssl.recv(1024)
-                except socket.error as e:
-                    if e.errno != socket.errno.ECONNRESET and e.errno != socket.errno.ECONNREFUSED:
-                        raise
-                    break
-                if chunk == b"":
-                    break
-                chunks.append(chunk)
-                bytes_recv = len(chunk)
-            request = b"".join(chunks)
-            if request == b"":
-                client_ssl.close()
-                return
+        # open socket to the reverse proxy
+        targetHostSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        targetHostSocket.connect(("127.0.0.1", int(self.config.port)))
 
-            log.debug("Request: %s[...]" % request[:65])
+        # exchanging requests/responses until the connection is closed
+        self.__exchangeData(client_ssl, targetHostSocket)
 
-            decoded = request.decode()
-            firstPart = urllib.parse.unquote(decoded[:30])
-            if firstPart.startswith("GET / HTTP") or firstPart.startswith("GET /default.html"):
-                previousRaSid = re.findall('^Cookie:.*RASID=([A-Za-z0-9+/=]+)[;\n\r $]', decoded)
-                if previousRaSid:
-                    raSid = previousRaSid[0]
-                else:
-                    raSid = b64encode(os.urandom(40)).decode()
-                response = self.config.welcomePage(raSid)
-                log.debug("Sending %s" % response)
-                try:
-                    client_ssl.send(response)
-                    client_ssl.close() # I think only the GET responses need to be closed right after the send
-                except socket.error as e:
-                    log.info("Error during sending response: %d" % e.errno)
-                    client_ssl.close()
-                return
-            # elif firstPart.startswith("GET /term"):
-            #     self.__createResponse(request, client_ssl, self.config.termPort)
-            #     client_ssl.close()
-            #     return
-            else:
-                self.__createResponse(request, client_ssl, self.config.rcPort)
-                client_ssl.close()
-                return     
+        targetHostSocket.close()
+        client_ssl.close()
 
         return
 

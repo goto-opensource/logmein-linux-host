@@ -19,6 +19,10 @@ parts:
     source: .
     requirements: requirements.txt
     stage-packages: [ openssh-client ]
+  reverse-proxy:
+    source: reverse-proxy/
+    plugin: nodejs
+    build-packages: [ gcc, g++, make, python ]
   novnc:
     plugin: dump
     source: https://github.com/novnc/noVNC/archive/v1.0.0.tar.gz
@@ -50,18 +54,17 @@ apps:
     command: pytty
     daemon: simple
     restart-condition: always
-    plugs:
-      - network
-      - network-bind
-      - process-control
+    plugs: [ network, network-bind, process-control ]
   logmein-host:
     command: logmein_host
     daemon: simple
     restart-condition: always
-    plugs:
-      - network
-      - network-bind
-      - process-control
+    plugs: [ network, network-bind, process-control ]
+  reverse-proxy:
+    command: reverse-proxy
+    daemon: simple
+    restart-condition: always
+    plugs: [ network, network-bind ]
   novnc:
     command: noVNC/utils/launch.sh --vnc localhost:23823 --listen 23822 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
     daemon: simple
