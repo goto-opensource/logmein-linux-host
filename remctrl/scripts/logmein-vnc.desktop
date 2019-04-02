@@ -1,0 +1,11 @@
+# Copy to $HOME/.config/autostart/
+[Desktop Entry]
+Type=Application
+Exec=/snap/bin/logmein-host.logmein-vnc
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=LogMeIn VNC Server
+Name=LogMeIn VNC Server
+Comment[en_US]=
+Comment=

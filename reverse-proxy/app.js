@@ -28,6 +28,7 @@ app.use(function (req, res, next) {
 var server = http.createServer(app);
 var proxy1 = httpProxy.createProxyServer({ target: 'http://localhost:23821', ssl: false, changeOrigin: false });
 var proxy2 = httpProxy.createProxyServer({ target: 'http://localhost:23822', ssl: false, changeOrigin: false });
+var proxy3 = httpProxy.createProxyServer({ target: 'http://localhost:23823', ssl: false, changeOrigin: false });
 
 app.get('/term*', function(req, res) {
   console.log("GET request for term", req.url);
@@ -45,6 +46,14 @@ app.post('/xterm*', function(req, res) {
   console.log("POST request for xterm", req.url);
   proxy2.web(req, res, {});
 });
+app.get('/*', function(req, res) {
+  console.log("GET request for remctrl", req.url);
+  proxy3.web(req, res, {});
+});
+app.post('/*', function(req, res) {
+  console.log("POST request for remctrl", req.url);
+  proxy3.web(req, res, {});
+});
 
 server.on('upgrade', function (req, socket, head) {
   if (req.url.match(/^\/term.*$/)) {
@@ -55,10 +64,11 @@ server.on('upgrade', function (req, socket, head) {
     console.log("Upgrade request for xterm", req.url);
     proxy2.ws(req, socket, head);
   } else {
-    console.log("Upgrade request for unknown app", req.url)
+    console.log("Upgrade request for remctrl", req.url);
+    proxy3.ws(req, socket, head);
   }
 });
 
-app.use('/', express.static(path.join(__dirname, 'public')))
+//app.use('/', express.static(path.join(__dirname, 'public')))
 
 server.listen(23820);
