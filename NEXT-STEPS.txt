@@ -1,0 +1,14 @@
+logmein-vnc.sh:
+- su is not working, implement a new script as `unipw_cmd.sh` that uses ssh for authentication
+
+vnc-starter.service:
+- could be replaced by a standard snap service
+
+To be documented:
+- disable Wayland server if loggin in will be implemented: https://c-nergy.be/blog/?p=12220
+- install `vnc-starter.service` under `/lib/systemd/system/vnc-starter.service`
+- install `logmein-vnc.desktop` under `/etc/xdg/autostart/logmein-vnc.desktop`
+-                               and `/usr/share/gdm/autostart/LoginWindow/logmein-vnc.desktop`
+
+Login hack: https://askubuntu.com/questions/1035598/ubuntu-18-04-lts-x11vnc-no-longer-works
+

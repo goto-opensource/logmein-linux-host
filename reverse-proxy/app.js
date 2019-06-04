@@ -5,7 +5,8 @@ var http = require('http'),
     express = require('express'),
     cookieParser = require('cookie-parser'),
     crypto = require('crypto'),
-    path = require('path');
+    path = require('path'),
+    tcpPortUsed = require('tcp-port-used');
 
 httpProxy.prototype.onError = function (err) {
   console.error("Error during connection:", err.code);
@@ -26,46 +27,68 @@ app.use(function (req, res, next) {
 });
 
 var server = http.createServer(app);
-var proxy1 = httpProxy.createProxyServer({ target: 'http://localhost:23821', ssl: false, changeOrigin: false });
-var proxy2 = httpProxy.createProxyServer({ target: 'http://localhost:23822', ssl: false, changeOrigin: false });
-var proxy3 = httpProxy.createProxyServer({ target: 'http://localhost:23823', ssl: false, changeOrigin: false });
+var termProxy = httpProxy.createProxyServer({ target: 'http://localhost:23821', ssl: false, changeOrigin: false });
+var xtermProxy = httpProxy.createProxyServer({ target: 'http://localhost:23822', ssl: false, changeOrigin: false });
+var rcLoginProxy = httpProxy.createProxyServer({ target: 'http://localhost:23823', ssl: false, changeOrigin: false });
+var rcProxy = httpProxy.createProxyServer({ target: 'http://localhost:23825', ssl: false, changeOrigin: false });
 
 app.get('/term*', function(req, res) {
   console.log("GET request for term", req.url);
-  proxy1.web(req, res, {});
+  termProxy.web(req, res, {});
 });
 app.post('/term*', function(req, res) {
   console.log("POST request for term", req.url);
-  proxy1.web(req, res, {});
+  termProxy.web(req, res, {});
 });
 app.get('/xterm*', function(req, res) {
   console.log("GET request for xterm", req.url);
-  proxy2.web(req, res, {});
+  xtermProxy.web(req, res, {});
 });
 app.post('/xterm*', function(req, res) {
   console.log("POST request for xterm", req.url);
-  proxy2.web(req, res, {});
+  xtermProxy.web(req, res, {});
 });
 app.get('/*', function(req, res) {
   console.log("GET request for remctrl", req.url);
-  proxy3.web(req, res, {});
+  tcpPortUsed.check(23826, "127.0.0.1")
+  .then(function(inUse) {
+    if (inUse) {
+      rcProxy.web(req, res, {});
+    }
+    else {
+      console.log("Failback to login proxy");
+      res.header("login-proxy", 1);
+      rcLoginProxy.web(req, res, {});
+    }
+  });
 });
 app.post('/*', function(req, res) {
   console.log("POST request for remctrl", req.url);
-  proxy3.web(req, res, {});
+  rcProxy.web(req, res, {}, function(err) {
+    rcLoginProxy.web(req, res, {});
+  });
 });
 
 server.on('upgrade', function (req, socket, head) {
   if (req.url.match(/^\/term.*$/)) {
     console.log("Upgrade request for term", req.url);
-    proxy1.ws(req, socket, head);
+    termProxy.ws(req, socket, head);
   }
   else if (req.url.match(/^\/xterm.*$/)) {
     console.log("Upgrade request for xterm", req.url);
-    proxy2.ws(req, socket, head);
+    xtermProxy.ws(req, socket, head);
   } else {
-    console.log("Upgrade request for remctrl", req.url);
-    proxy3.ws(req, socket, head);
+    tcpPortUsed.check(23826, "127.0.0.1")
+    .then(function(inUse) {
+      if (inUse) {
+        console.log("Upgrade request for remctrl (rc)", req.url);
+        rcProxy.ws(req, socket, head); 
+      } 
+      else {
+        console.log("Upgrade request for remctrl (login rc)", req.url);
+        rcLoginProxy.ws(req, socket, head);
+      }
+    });
   }
 });
 

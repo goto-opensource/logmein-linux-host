@@ -31,6 +31,7 @@ from .logmein_host import Config, Host, Register
 
 def main():
     config = Config()
+    config.loglevel = "DEBUG"
     logging.basicConfig(level=config.getLoglevel(), format='%(threadName)s %(message)s')
 
     licensePath = os.getenv("SNAP_COMMON", "/var/lib/logmein-host")

@@ -25,7 +25,7 @@ parts:
     build-packages: [ gcc, g++, make, python ]
   novnc:
     plugin: dump
-    source: https://github.com/novnc/noVNC/archive/v1.0.0.tar.gz
+    source: https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz
     organize:
       '*': noVNC/
   novnc-branding:
@@ -71,6 +71,11 @@ apps:
     restart-condition: always
     plugs: [ network, network-bind ]
   novnc:
+    command: noVNC/utils/launch.sh --vnc localhost:23826 --listen 23825 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
+    daemon: simple
+    restart-condition: always
+    plugs: [ network, network-bind, process-control ]
+  novnc-login:
     command: noVNC/utils/launch.sh --vnc localhost:23824 --listen 23823 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
     daemon: simple
     restart-condition: always
@@ -78,20 +83,7 @@ apps:
   logmein-vnc:
     command: scripts/logmein-vnc.sh
     plugs: [ network, network-bind, x11, account-control ]
-  # logmein-vnc-server:
-  #   # Before: sudo x11vnc -storepasswd /etc/x11vnc.pass 
-  #   #command: x11vnc -norc -forever -localhost -usepw -autoport 23824  -env FD_XDM=1 -auth guess -noxdamage -repeat -rfbauth /etc/x11vnc.pass -shared -display WAIT:cmd=FINDDISPLAY
-  #   #command: x11vnc -norc -forever -localhost -display WAIT:cmd=FINDCREATEDISPLAY-Xtigervnc -noxdamage
-  #   command: /bin/sh -c "x11vnc -env UNIXPW_DISABLE_SSL=1 -loop -forever -bg -rfbport 5900 -xkb -noxrecord -noxfixes -noxdamage -shared -norc -auth /run/user/`id -u gdm`/gdm/Xauthority -unixpw"
-  #   #daemon: simple
-  #   #restart-condition: always
-  #   plugs:
-  #     - network
-  #     - network-bind
-  #     - x11
-  #     - desktop
-  #     - desktop-legacy
-  #     - process-control
+
   
 
   
