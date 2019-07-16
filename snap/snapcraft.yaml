@@ -17,7 +17,7 @@ parts:
   pytty:
     plugin: python
     source: .
-    requirements: requirements.txt
+    requirements: [ requirements.txt ]
     stage-packages: [ openssh-client ]
   reverse-proxy:
     source: reverse-proxy/
