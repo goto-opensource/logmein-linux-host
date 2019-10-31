@@ -446,10 +446,9 @@ class Host(object):
 
     def __handleSessionData(self, data):
         if 0 < self.pendingRequests.count:
-            hostAuth = self.pendingRequests.pop(0)
-            session = Session(hostAuth)
+            session = self.pendingRequests.pop(0)
             if session.parse(data):
-                self.sessions[hostAuth] = session
+                self.sessions[session.hostAuth] = session
 
     def __assignConnIdToSession(self, connectionId, sessionId):
         REQ_MSG_SESSION_ASSIGNINDEX = (
