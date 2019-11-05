@@ -199,7 +199,7 @@ class Session:
         return (self.TIMEOUT < ellapsedTime)
 
     def parse(self, data):
-        buf = io.StringIO(data)
+        buf = io.StringIO(data.decode())
         # read request header
         for head in iter(lambda: buf.readline().rstrip(), ""):
             # read session-id
@@ -207,6 +207,7 @@ class Session:
             # set session-id if didn't set yet
             if not self.id:
                 self.id = sessionId
+                log.info("New session started: {}".format(self.id))
             # check session-id
             elif sessionId != self.id:
                 return False
@@ -445,7 +446,7 @@ class Host(object):
         log.debug("Exiting thread")
 
     def __handleSessionData(self, data):
-        if 0 < self.pendingRequests.count:
+        if self.pendingRequests:
             session = self.pendingRequests.pop(0)
             if session.parse(data):
                 self.sessions[session.hostAuth] = session
