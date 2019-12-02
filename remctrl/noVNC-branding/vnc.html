@@ -76,13 +76,13 @@
     <script type="module" crossorigin="anonymous" src="app/ui.js"></script>
     <!-- end scripts -->
     <script>
-        function clickConnect(){
-            document.getElementById("noVNC_connect_button").dispatchEvent(new CustomEvent("click"));
+        function openConnectPanel() {
+            document.getElementById('noVNC_connect_dlg').classList.add("noVNC_open");
         }
     </script>
 </head>
 
-<body onload="clickConnect()">
+<body onload="openConnectPanel()">
 
     <div id="noVNC_fallback_error" class="noVNC_center">
         <div>
@@ -285,9 +285,20 @@
 
     <!-- Connect button -->
     <div class="noVNC_center">
-        <div id="noVNC_connect_dlg">
+        <div id="noVNC_connect_dlg" class="noVNC_panel">
+            <div class="noVNC_logo" translate="no"><span>no</span>VNC</div>
+            <ul>
+                <li>
+                    <label>Username:</label>
+                    <input id="noVNC_auth_user_input" type="text">
+                </li>
+                <li>
+                    <label>Password:</label>
+                    <input id="noVNC_auth_pass_input" type="password">
+                </li>
+            </ul>
             <div id="noVNC_connect_button"><div>
-                <img src="app/images/connect.svg"> Connect
+                <img alt="" src="app/images/connect.svg"> Connect
             </div></div>
         </div>
     </div>

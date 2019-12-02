@@ -1,5 +1,5 @@
 name: logmein-host
-version: '1.0' # just for humans, typically '1.2+git' or '1.3.2'
+version: '1.1' # just for humans, typically '1.2+git' or '1.3.2'
 summary: The LogMeIn Host Software (Beta) for Linux # 79 char long summary
 icon: snap/gui/icon.png
 base: core18
@@ -17,11 +17,12 @@ parts:
   pytty:
     plugin: python
     source: .
-    requirements: requirements.txt
+    requirements: [ requirements.txt ]
     stage-packages: [ openssh-client ]
   reverse-proxy:
     source: reverse-proxy/
     plugin: nodejs
+    nodejs-package-manager: npm
     build-packages: [ gcc, g++, make, python ]
   novnc:
     plugin: dump
@@ -37,14 +38,19 @@ parts:
     plugin: nil
     stage-packages: 
       - websockify
-      - python-websockify
-      - python-setuptools
-      - python-numpy
-      - python-openssl
+      - python3-websockify
+      - python3-setuptools
+      - python3-numpy
+      - python3-openssl
       - openssl 
       - net-tools
     organize:
-      usr/bin/python2-websockify: usr/bin/websockify
+      usr/bin/python3-websockify: usr/bin/websockify
+  websockify-custom:
+    plugin: dump
+    source: ./remctrl/websockify-custom
+    organize:
+      '*': websockify-custom/
   x11vnc:
     plugin: nil
     stage-packages: [ x11vnc, xauth, coreutils, tigervnc-standalone-server ]
@@ -71,19 +77,21 @@ apps:
     restart-condition: always
     plugs: [ network, network-bind ]
   novnc:
-    command: noVNC/utils/launch.sh --vnc localhost:23826 --listen 23825 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
+    command: websockify-custom/launch.sh --vnc localhost:23826 --listen 23825 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
     daemon: simple
     restart-condition: always
+    environment:
+        PYTHONPATH: ${PYTHONPATH}:${SNAP}/websockify-custom
+        EXTRA_ARGS: --auth-plugin=ssh_auth.ssh_auth.HTTPAuthWithSsh
     plugs: [ network, network-bind, process-control ]
   novnc-login:
-    command: noVNC/utils/launch.sh --vnc localhost:23824 --listen 23823 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
+    command: websockify-custom/launch.sh --vnc localhost:23824 --listen 23823 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
     daemon: simple
     restart-condition: always
+    environment:
+        PYTHONPATH: ${PYTHONPATH}:${SNAP}/websockify-custom
+        EXTRA_ARGS: --auth-plugin=ssh_auth.ssh_auth.HTTPAuthWithSsh --auth-source=foo:bar
     plugs: [ network, network-bind, process-control ]
   logmein-vnc:
     command: scripts/logmein-vnc.sh
-    plugs: [ network, network-bind, x11, account-control ]
-
-  
-
-  
+    plugs: [ network, network-bind, x11 ]

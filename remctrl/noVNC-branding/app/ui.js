@@ -970,8 +970,25 @@ const UI = {
             .classList.remove("noVNC_open");
     },
 
-    connect(event, password) {
+    getAuthInfo() {
+        const userInputElem = document.getElementById('noVNC_auth_user_input');
+        const authUser = userInputElem.value;
 
+        const passInputElem = document.getElementById('noVNC_auth_pass_input');
+        const authPass = passInputElem.value;
+        // Clear the input after reading the password
+        passInputElem.value = "";
+
+        if (authUser && authUser !== "" && authPass && authPass !== "") {
+            return authUser + ":" + authPass + "@";
+        }
+        else {
+            // Empty password is not allowed
+            return undefined;
+        }
+    },
+
+    connect(event, password) {
         // Ignore when rfb already exists
         if (typeof UI.rfb !== 'undefined') {
             return;
@@ -998,6 +1015,13 @@ const UI = {
             return;
         }
 
+        const authInfo = UI.getAuthInfo();
+        if (!authInfo) {
+            Log.Error("Username or password not provided");
+            UI.showStatus(_("Please enter username and password"), 'error');
+            return;
+        }
+
         UI.closeAllPanels();
         UI.closeConnectPanel();
 
@@ -1007,11 +1031,14 @@ const UI = {
 
         url = UI.getSetting('encrypt') ? 'wss' : 'ws';
 
-        url += '://' + host;
+        url += '://' + authInfo + host;
         if (port) {
             url += ':' + port;
         }
         url += '/' + path;
+
+        var authWS = new WebSocket(url);
+        authWS.close();
 
         UI.rfb = new RFB(document.getElementById('noVNC_container'), url,
                          { shared: UI.getSetting('shared'),

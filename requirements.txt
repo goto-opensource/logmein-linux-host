@@ -1,3 +1,4 @@
 pexpect~=4.6.0
 tornado~=4.5.3
 pycrypto~=2.6.1
+ssh2-python~=0.18

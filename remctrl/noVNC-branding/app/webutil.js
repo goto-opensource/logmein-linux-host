@@ -116,6 +116,10 @@ let settings = {};
 
 export function initSettings(callback /*, ...callbackArgs */) {
     "use strict";
+    
+    console.log("initSettings");
+
+
     const callbackArgs = Array.prototype.slice.call(arguments, 1);
     if (window.chrome && window.chrome.storage) {
         window.chrome.storage.sync.get((cfg) => {
