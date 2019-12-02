@@ -178,6 +178,55 @@ class AESCipher(object):
     def _unpad(s):
         return s[:-ord(s[len(s)-1:])]
 
+class Session:
+    def __init__(self, hostAuth):
+        self.TIMEOUT = 30 * 60
+        self.HEAD_EMAIL = "SESSION:EMAIL"
+        self.HEAD_REFERRER = "SESSION:SETREFERRER"
+        self.HEAD_ASSIGNINDEX = "SESSION:ASSIGNINDEX:"
+        self.hostAuth = hostAuth
+        self.id = False
+        self.eMail = False
+        self.referrer = False
+        self.assignedIndex = False
+        self.lastActivity = time.time();
+    
+    def onActivity(self):
+        self.lastActivity = time.time();
+
+    def expired(self):
+        ellapsedTime = time.time() - self.lastActivity
+        return (self.TIMEOUT < ellapsedTime)
+
+    def parse(self, data):
+        buf = io.StringIO(data.decode())
+        # read request header
+        for head in iter(lambda: buf.readline().rstrip(), ""):
+            # read session-id
+            sessionId = buf.readline().rstrip()
+            # set session-id if didn't set yet
+            if not self.id:
+                self.id = sessionId
+                log.info("New session started: {}".format(self.id))
+            # check session-id
+            elif sessionId != self.id:
+                return False
+            # parse e-mail address
+            if head.startswith(self.HEAD_EMAIL):
+                self.eMail = buf.readline().rstrip()
+            # parse HTTP referrer
+            elif head.startswith(self.HEAD_REFERRER):
+                self.referrer = buf.readline().rstrip()
+            # parse assigned index of session
+            elif head.startswith(self.HEAD_ASSIGNINDEX):
+                self.assignedIndex = head[len(self.HEAD_ASSIGNINDEX):len(head)].rstrip()
+            # unknown request header
+            else:
+                log.warn("Session::parse(): unsupported request: '{}'. Skipped.".format(head))
+        return True
+
+    def __str__(self):
+        return self.id
 
 class Host(object):
     """Connecting host to LogMeIn"""
@@ -187,6 +236,8 @@ class Host(object):
         self.control_ssl = ssl.wrap_socket(self.sock)
         self.control_lock = threading.Lock()
         self.gateway = ""
+        self.pendingRequests = []
+        self.sessions = {}
 
     def __del__(self):
         self.control_ssl.close()
@@ -394,6 +445,21 @@ class Host(object):
 
         log.debug("Exiting thread")
 
+    def __handleSessionData(self, data):
+        if self.pendingRequests:
+            session = self.pendingRequests.pop(0)
+            if session.parse(data):
+                self.sessions[session.hostAuth] = session
+
+    def __assignConnIdToSession(self, connectionId, sessionId):
+        REQ_MSG_SESSION_ASSIGNINDEX = (
+            "SESSION:ASSIGNCID:{0}\n"
+            "{1}\n"
+        )
+        message = REQ_MSG_SESSION_ASSIGNINDEX.format(connectionId, sessionId)
+        log.debug("Sending %s" % message)
+        self.control_ssl.write(message.encode())
+
     def __handleDataSock(self, data):
         REQ_MSG_DATASOCK = (
             "RAHOST DATASOCK\n"
@@ -409,6 +475,21 @@ class Host(object):
         buf.readline()
         buf.readline() # clientAddr
         connectionId = buf.readline().rstrip()
+
+        # assign connection to session
+        if hostAuth in self.sessions.keys():
+            session = self.sessions[hostAuth]
+            session.onActivity()
+            self.__assignConnIdToSession(connectionId, session.id)
+        else:
+            self.pendingRequests.append(Session(hostAuth))
+
+        # cleanup sessions
+        active = {}
+        for auth, sess in self.sessions.items():
+            if not sess.expired():
+                active[auth] = sess
+        self.sessions = active
 
         message = REQ_MSG_DATASOCK.format(self.hostId, hostAuth, connectionId)
         log.debug("Sending %s" % message)
@@ -436,6 +517,7 @@ class Host(object):
     def messageLoop(self):
         REQ_MSG_PONG = "PONG"
         REQ_MSG_NEW_DATA = "REQDATASOCK"
+        REQ_MSG_SESSION = "SESSION:"
         while 1:
             try:
                 data = self.control_ssl.read()
@@ -449,6 +531,9 @@ class Host(object):
             if data.decode().startswith(REQ_MSG_NEW_DATA):
                 log.debug("New data: %s" % data)
                 threading.Thread(target=self.__handleDataSock, args=[data]).start()
+            if data.decode().startswith(REQ_MSG_SESSION):
+                log.debug("New data: %s" % data)
+                self.__handleSessionData(data)
             elif not data.decode().startswith(REQ_MSG_PONG):
                 log.debug("[messageLoop] Message: %s" % data)
         log.info("Exiting messageLoop")
