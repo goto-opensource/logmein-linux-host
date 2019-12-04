@@ -3,6 +3,7 @@
 DEPLOY_CODE=$(snapctl get deploy-code)
 
 if [ "${DEPLOY_CODE}" != "none" ] && [ "${DEPLOY_CODE}" != "SAVED" ]; then
+    rm -f "${SNAP_COMMON}/license.dat"
     snapctl start --enable ${SNAP_NAME}.pytty
     snapctl restart ${SNAP_NAME}.pytty
     snapctl start --enable ${SNAP_NAME}.logmein-host 

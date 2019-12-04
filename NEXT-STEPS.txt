@@ -9,6 +9,8 @@ To be documented:
 - install `vnc-starter.service` under `/lib/systemd/system/vnc-starter.service`
 - install `logmein-vnc.desktop` under `/etc/xdg/autostart/logmein-vnc.desktop`
 -                               and `/usr/share/gdm/autostart/LoginWindow/logmein-vnc.desktop`
+- At the moment run `repo/preflight.sh`
+
 
 Login hack: https://askubuntu.com/questions/1035598/ubuntu-18-04-lts-x11vnc-no-longer-works
 

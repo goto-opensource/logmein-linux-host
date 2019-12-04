@@ -92,6 +92,6 @@ server.on('upgrade', function (req, socket, head) {
   }
 });
 
-//app.use('/', express.static(path.join(__dirname, 'public')))
+app.use('/', express.static(path.join(__dirname, 'public')))
 
 server.listen(23820);

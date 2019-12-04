@@ -34,6 +34,13 @@ def main():
     config.loglevel = "DEBUG"
     logging.basicConfig(level=config.getLoglevel(), format='%(threadName)s %(message)s')
 
+    p = subprocess.Popen(["snapctl", "get", "homesite"], stdout=subprocess.PIPE)
+    homeSite = p.stdout.read().decode().rstrip()
+    retval = p.wait()
+
+    if retval == 0 and homeSite != "":
+        config.homeSite = homeSite
+
     licensePath = os.getenv("SNAP_COMMON", "/var/lib/logmein-host")
     licenseFile = "{}/license.dat".format(licensePath)
     config.globalLicenseFile = os.getenv("LICENSE_FILE", licenseFile)

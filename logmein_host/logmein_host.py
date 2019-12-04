@@ -318,7 +318,7 @@ class Host(object):
         targetToCount = 0
 
         while not terminate or len(clientData) > 0 or len(targetHostData) > 0:
-            log.debug("---------------------")
+            # log.debug("---------------------")
             inputs = [clientSocket, targetHostSocket]
             outputs = []
             
@@ -342,12 +342,12 @@ class Host(object):
                             if len(data) > 0:
                                 targetHostData += data
                                 clientFromCount += len(data)
-                                log.debug(f"Read {len(data)} bytes data from CLIENT. Total: {clientFromCount}")
+                                # log.debug(f"Read {len(data)} bytes data from CLIENT. Total: {clientFromCount}")
                                 with suppress(Exception):
                                     log.debug("Request: %s[...]" % data.decode()[:65])
                             else:
                                 terminate = True
-                                log.debug("terminating B")
+                                log.debug(f"Read {clientFromCount} bytes data from CLIENT.")
                     except Exception as e:
                         log.debug("exchangeData B {}".format(e))
                         break
@@ -358,21 +358,22 @@ class Host(object):
                             if len(data) > 0:
                                 clientData += data
                                 targetFromCount += len(data)
-                                log.debug(f"Read {len(data)} bytes data from HOST. Total: {targetFromCount}")
+                                # log.debug(f"Read {len(data)} bytes data from HOST. Total: {targetFromCount}")
                             else:
                                 terminate = True
-                                log.debug("terminating C")
+                                log.debug(f"Read {targetFromCount} bytes data from HOST")
+
                     except Exception as e:
                         log.debug("exchangeData C {}".format(e))
                         break
                                             
             for out in outputsReady:
-                log.debug(f"out: {out} clientData: {len(clientData)} targetData: {len(targetHostData)}")
+                # log.debug(f"out: {out} clientData: {len(clientData)} targetData: {len(targetHostData)}")
                 if out == clientSocket and len(clientData) > 0:
                     try:
                         bytesWritten = clientSocket.send(clientData)
                         clientToCount += bytesWritten
-                        log.debug(f"Sent {bytesWritten} bytes data to CLIENT. Total: {clientToCount}")
+                        # log.debug(f"Sent {bytesWritten} bytes data to CLIENT. Total: {clientToCount}")                       
                         if bytesWritten > 0:
                             clientData = clientData[bytesWritten:]
                     except ssl.SSLWantWriteError:
@@ -380,12 +381,12 @@ class Host(object):
                 elif out == targetHostSocket and len(targetHostData) > 0:
                     bytesWritten = targetHostSocket.send(targetHostData)
                     targetToCount += bytesWritten
-                    log.debug(f"Sent {bytesWritten} bytes data to HOST. Total: {targetToCount}")
+                    # log.debug(f"Sent {bytesWritten} bytes data to HOST. Total: {targetToCount}")
                     if bytesWritten > 0:
                         targetHostData = targetHostData[bytesWritten:]
         
         if len(targetHostData) > 0:
-            clientSocket.sendall(targetHostData)
+            targetHostSocket.sendall(targetHostData)
             log.debug("Sent all remaining data to HOST.")
     
         if len(clientData) > 0:
