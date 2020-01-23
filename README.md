@@ -1,5 +1,6 @@
 LogMeIn host software for Linux (Beta)
 ======================================
+[![Snap Status](https://build.snapcraft.io/badge/LogMeIn/logmein-linux-host.svg)](https://build.snapcraft.io/user/LogMeIn/logmein-linux-host)
 
 ### Overview
 
