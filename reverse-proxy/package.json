@@ -7,13 +7,16 @@
     "serve": "./app.js"
   },
   "bin": {
-    "reverse-proxy": "./app.js"
+    "reverse-proxy": "./app.js",
+    "wetty": "./node_modules/wetty/index.js"
   },
   "author": "LogMeIn, Inc.",
   "license": "MIT",
   "dependencies": {
     "cookie-parser": "^1.4.4",
     "express": "^4.16.4",
-    "http-proxy": "^1.17.0"
+    "http-proxy": "^1.17.0",
+    "node-gyp": "^6.1",
+    "wetty": "~1.3.0"
   }
 }
