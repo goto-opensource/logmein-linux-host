@@ -22,7 +22,7 @@ parts:
   reverse-proxy:
     source: reverse-proxy/
     plugin: nodejs
-    nodejs-version: 12.14.1
+    nodejs-version: 8.17.0
     nodejs-package-manager: yarn
     build-environment:
       - npm_config_unsafe_perm: 'true'
