@@ -56,8 +56,15 @@ def main():
     if deploy_code == "" or deploy_code == "none":
         logging.error("Generate an Installation Link and configure first. Further info:")
         logging.error("https://repository.services.logmein.com/linux/index.html")
-        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.pytty\"", shell=True)
+
         subprocess.run("snapctl stop --disable \"${SNAP_NAME}.logmein-host\"", shell=True)
+        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.pytty\"", shell=True)
+        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.wetty\"", shell=True)
+        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.reverse-proxy\"", shell=True)
+        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.novnc\"", shell=True)
+        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.novnc-login\"", shell=True)
+        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.logmein-vnc\"", shell=True)
+
         time.sleep(5)
 
     if deploy_code != "SAVED":

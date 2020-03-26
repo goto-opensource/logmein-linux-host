@@ -51,6 +51,6 @@ $ python3 logmein_host/logmein_host.py
 ```
 
 ### License
-Copyright (c) 2018 LogMeIn, Inc.
+Copyright (c) 2018-2020 LogMeIn, Inc.
 
 Licensed under the MIT License

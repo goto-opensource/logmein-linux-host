@@ -1,11 +1,23 @@
 #!/bin/sh -e
 
 DEPLOY_CODE=$(snapctl get deploy-code)
+ENABLE_VNC=$(snapctl get enable-vnc)
 
 if [ "${DEPLOY_CODE}" != "none" ] && [ "${DEPLOY_CODE}" != "SAVED" ]; then
     rm -f "${SNAP_COMMON}/license.dat"
-    snapctl start --enable ${SNAP_NAME}.pytty
-    snapctl restart ${SNAP_NAME}.pytty
-    snapctl start --enable ${SNAP_NAME}.logmein-host 
-    snapctl restart ${SNAP_NAME}.logmein-host
+    for service in pytty wetty reverse-proxy logmein-host; do
+        snapctl start --enable ${SNAP_NAME}.${service}
+        snapctl restart ${SNAP_NAME}.${service}
+    done
+fi
+
+if [ "${ENABLE_VNC}" == "yes" ] || [ "${ENABLE_VNC}" == "Yes" ] || [ "${ENABLE_VNC}" == "true" ] || [ "${ENABLE_VNC}" == "True" ]; then
+    for service in novnc novnc-login logmein-vnc; do
+        snapctl start --enable ${SNAP_NAME}.${service}
+        snapctl restart ${SNAP_NAME}.${service}
+    done
+else
+    for service in novnc novnc-login logmein-vnc; do
+        snapctl stop --disable ${SNAP_NAME}.${service}
+    done
 fi
