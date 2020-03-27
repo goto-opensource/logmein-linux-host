@@ -2,7 +2,6 @@
 [Desktop Entry]
 Type=Application
 Exec=/snap/bin/logmein-host.logmein-vnc
-#Exec=/home/jkasza/Git/github-logmein-host/remctrl/scripts/logmein-vnc.sh
 Hidden=false
 NoDisplay=true
 X-GNOME-Autostart-enabled=true

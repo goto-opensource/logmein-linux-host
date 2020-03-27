@@ -1,4 +1,3 @@
-        EXTRA_ARGS="--auth-plugin=foo.ssh_auth.HTTPAuthWithSsh --auth-source=foo:bar"
 #!/bin/bash
 
 (

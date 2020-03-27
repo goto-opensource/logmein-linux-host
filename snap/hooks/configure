@@ -12,12 +12,11 @@ if [ "${DEPLOY_CODE}" != "none" ] && [ "${DEPLOY_CODE}" != "SAVED" ]; then
 fi
 
 if [ "${ENABLE_VNC}" == "yes" ] || [ "${ENABLE_VNC}" == "Yes" ] || [ "${ENABLE_VNC}" == "true" ] || [ "${ENABLE_VNC}" == "True" ]; then
-    for service in novnc novnc-login logmein-vnc; do
+    for service in novnc novnc-login; do
         snapctl start --enable ${SNAP_NAME}.${service}
-        snapctl restart ${SNAP_NAME}.${service}
     done
 else
-    for service in novnc novnc-login logmein-vnc; do
+    for service in novnc novnc-login; do
         snapctl stop --disable ${SNAP_NAME}.${service}
     done
 fi

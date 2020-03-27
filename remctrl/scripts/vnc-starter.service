@@ -7,7 +7,8 @@ After=display-manager.service
 
 [Service]
 ExecStart=/snap/bin/logmein-host.logmein-vnc
-ExecStop=/usr/bin/killall x11vnc
+KillMode=mixed
+TimeoutStopSec=10
 Restart=on-failure
 Restart-sec=2
 
