@@ -18,7 +18,9 @@ parts:
     plugin: python
     source: .
     requirements: [ requirements.txt ]
-    stage-packages: [ openssh-client ]
+    stage-packages: 
+      - openssh-client
+      - cmake
   reverse-proxy:
     source: reverse-proxy/
     plugin: nodejs
@@ -27,7 +29,10 @@ parts:
     build-environment:
       - npm_config_unsafe_perm: 'true'
       - npm_config_prefer_online: 'true'
-    build-packages: [ git, gcc, g++, make, python, build-essential ]
+    build-packages: 
+      - git
+      - python
+      - build-essential
   novnc:
     plugin: dump
     source: https://github.com/novnc/noVNC/archive/v1.1.0.tar.gz
@@ -57,7 +62,10 @@ parts:
       '*': websockify-custom/
   x11vnc:
     plugin: nil
-    stage-packages: [ x11vnc, xauth, coreutils, tigervnc-standalone-server ]
+    stage-packages:
+      - x11vnc
+      - xauth
+      - coreutils
   x11vnc-scripts:
     plugin: dump
     source: ./remctrl/scripts
