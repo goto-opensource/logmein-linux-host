@@ -21,7 +21,7 @@ if [ "$1" == "--install" ]; then
     sudo systemctl enable vnc-starter.service
     sudo systemctl start vnc-starter.service
 
-    sudo snap set logmein-host.enable-vnc=yes
+    sudo snap set logmein-host enable-vnc=yes
 
 elif [ "$1" == "--uninstall" ]; then
     sudo systemctl stop vnc-starter.service
@@ -33,6 +33,6 @@ elif [ "$1" == "--uninstall" ]; then
 
     snap list logmein-host &>/dev/null
     if [ "$?" == "0" ]; then
-        sudo snap set logmein-host.enable-vnc=no
+        sudo snap set logmein-host enable-vnc=no
     fi
 fi

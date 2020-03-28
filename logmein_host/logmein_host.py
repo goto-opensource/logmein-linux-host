@@ -127,7 +127,7 @@ class Config(object):
                         config = cipher.decrypt(f.read())
                         log.debug("global config: %s" % config)
                 except FileNotFoundError:
-                    print("License file not found! Please register first.")
+                    print(f"License file not found at \"{self.globalLicenseFile}\"! Please register first.")
                     sys.exit(1)
 
         for line in config.splitlines():

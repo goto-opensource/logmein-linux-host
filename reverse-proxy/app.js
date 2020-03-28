@@ -32,6 +32,8 @@ var xtermProxy = httpProxy.createProxyServer({ target: 'http://localhost:23822',
 var rcLoginProxy = httpProxy.createProxyServer({ target: 'http://localhost:23823', ssl: false, changeOrigin: false });
 var rcProxy = httpProxy.createProxyServer({ target: 'http://localhost:23825', ssl: false, changeOrigin: false });
 
+app.use('/', express.static(path.join(__dirname, 'public')));
+
 app.get('/term*', function(req, res) {
   console.log("GET request for term", req.url);
   termProxy.web(req, res, {});
@@ -91,7 +93,5 @@ server.on('upgrade', function (req, socket, head) {
     });
   }
 });
-
-app.use('/', express.static(path.join(__dirname, 'public')))
 
 server.listen(23820);
