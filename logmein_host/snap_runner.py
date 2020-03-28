@@ -63,7 +63,6 @@ def main():
         subprocess.run("snapctl stop --disable \"${SNAP_NAME}.reverse-proxy\"", shell=True)
         subprocess.run("snapctl stop --disable \"${SNAP_NAME}.novnc\"", shell=True)
         subprocess.run("snapctl stop --disable \"${SNAP_NAME}.novnc-login\"", shell=True)
-        subprocess.run("snapctl stop --disable \"${SNAP_NAME}.logmein-vnc\"", shell=True)
 
         time.sleep(5)
 
