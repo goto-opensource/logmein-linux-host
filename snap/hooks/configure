@@ -1,7 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
 
-DEPLOY_CODE=$(snapctl get deploy-code)
-ENABLE_VNC=$(snapctl get enable-vnc)
+DEPLOY_CODE="$(snapctl get deploy-code)"
+ENABLE_VNC="$(snapctl get enable-vnc)"
 
 if [ "${DEPLOY_CODE}" != "" ] && [ "${DEPLOY_CODE}" != "none" ] && [ "${DEPLOY_CODE}" != "SAVED" ]; then
     rm -f "${SNAP_COMMON}/license.dat"
