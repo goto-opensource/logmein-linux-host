@@ -8,15 +8,13 @@ The LogMeIn Host Software (Beta) is available for Linux.
   
 Each Linux host is displayed like any other host in your Computers list. When you connect to a Linux host, a remote terminal shell opens and it allows you to send commands to the host computer.
 
-### Requirements
-
-Python version 3.4+ is required with some PyPi dependencies. To install the dependencies run the following after cloning this repository:
-
-```sh
-$ pip3 install -r requirements.txt
-```
-
 ### Installing the `logmein-host` for Linux
+
+You must have snapd installed. To download snapd, visit https://docs.snapcraft.io/core/install.
+On your Linux device, open a Terminal and use the following command:
+```sh
+sudo snap install logmein-host
+```
 
 **Generate an Installation Package and retrieve the Deployment Code**
 1.  In LogMeIn Central, go to the **Deployment** page.
@@ -26,7 +24,24 @@ $ pip3 install -r requirements.txt
 5.  On the _Deploy Installation Package_ page, copy the **Installation Link**.  
     Example: `https://secure.logmein.com/i?l=en&c=01_bma2ecmmg4coyxou9oo6yhhvw0ewi3estniee`
 
-**Register the host in the LogMeIn Central**  
+**Register the host in the LogMeIn Central**
+
+Use the **Installation Link** or the deployment code itself:
+```sh
+sudo snap set logmein-host 'deploy-code=<install link>'
+```
+
+### Development
+**Requirements**
+
+Python version 3.4+ is required with some PyPi dependencies. To install the dependencies run the following after cloning this repository:
+
+```sh
+$ pip3 install -r requirements.txt
+```
+
+**Register the host in the LogMeIn Central**
+
 Use the **Installation Link** or the deployment code itself:
 
 ```sh
@@ -37,7 +52,8 @@ $ python3 logmein_host/logmein_host.py --deployment-code 'https://secure.logmein
 $ python3 logmein_host/logmein_host.py --deployment-code "01_bma2ecmmg4coyxou9oo6yhhvw0ewi3estniee"
 ```
 
-### Running the host
+**Running the host**
+
 Run `pytty`, the web terminal app that will connect to the localhost using *ssh*  and forward the *tty* to the browser:
 
 ```sh
@@ -49,6 +65,7 @@ Then run `logmein_host` which connects `pytty` to the LogMeIn gateways:
 ```sh
 $ python3 logmein_host/logmein_host.py 
 ```
+
 
 ### License
 Copyright (c) 2018-2020 LogMeIn, Inc.
