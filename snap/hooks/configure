@@ -11,13 +11,14 @@ if [ "${DEPLOY_CODE}" != "" ] && [ "${DEPLOY_CODE}" != "none" ] && [ "${DEPLOY_C
     done
 fi
 
-if [ "${ENABLE_VNC}" == "yes" ] || [ "${ENABLE_VNC}" == "Yes" ] || [ "${ENABLE_VNC}" == "true" ] || [ "${ENABLE_VNC}" == "True" ]; then
+if [ "${ENABLE_VNC}" == "yes" ]; then
     if [ ! -f "${SNAP_COMMON}/self.pem" ]; then
         openssl req -new -x509 -days 3650 -nodes -out "${SNAP_COMMON}/self.pem" \
             -keyout "${SNAP_COMMON}/self.pem" -subj '/CN=www.mydom.com/O=My Company Name LTD./C=US'
     fi
     for service in novnc novnc-login; do
         snapctl start --enable ${SNAP_NAME}.${service}
+        snapctl restart ${SNAP_NAME}.${service}
     done
 else
     for service in novnc novnc-login; do

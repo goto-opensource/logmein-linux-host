@@ -100,20 +100,20 @@ apps:
     restart-condition: always
     plugs: [ network, network-bind ]
   novnc:
-    command: websockify-custom/launch.sh --vnc localhost:23826 --listen 23825 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
+    # The vnc server at localhost:23826 can be overriden if the "use-default-vnc-port" snap config is set to "yes", 
+    # so localhost:5900 will be used in this case.
+    command: websockify-custom/launch.sh --use-snap-settings --vnc localhost:23826 --listen 23825 --web $SNAP/noVNC-branding --cert $SNAP_COMMON/self.pem
     daemon: simple
     restart-condition: always
     environment:
         PYTHONPATH: ${PYTHONPATH}:${SNAP}/websockify-custom
-        EXTRA_ARGS: --auth-plugin=ssh_auth.ssh_auth.HTTPAuthWithSsh --heartbeat=5 --auto-pong
     plugs: [ network, network-bind, process-control ]
   novnc-login:
-    command: websockify-custom/launch.sh --vnc localhost:23824 --listen 23823 --web "${SNAP}/noVNC-branding" --cert "${SNAP_COMMON}/self.pem"
+    command: websockify-custom/launch.sh --vnc localhost:23824 --listen 23823 --web $SNAP/noVNC-branding --cert $SNAP_COMMON/self.pem
     daemon: simple
     restart-condition: always
     environment:
         PYTHONPATH: ${PYTHONPATH}:${SNAP}/websockify-custom
-        EXTRA_ARGS: --auth-plugin=ssh_auth.ssh_auth.HTTPAuthWithSsh --heartbeat=5 --auto-pong
     plugs: [ network, network-bind, process-control ]
   logmein-vnc:
     command: scripts/logmein-vnc.sh

@@ -8,7 +8,7 @@ usage() {
         echo "$*"
         echo
     fi
-    echo "Usage: ${NAME} [--listen PORT] [--vnc VNC_HOST:PORT] [--cert CERT] [--ssl-only]"
+    echo "Usage: ${NAME} [--listen PORT] [--use-snap-settings] [--vnc VNC_HOST:PORT] [--cert CERT] [--ssl-only]"
     echo
     echo "Starts the WebSockets proxy and a mini-webserver and "
     echo "provides a cut-and-paste URL to go to."
@@ -17,6 +17,8 @@ usage() {
     echo "                          Default: 6080"
     echo "    --vnc VNC_HOST:PORT   VNC server host:port proxy target"
     echo "                          Default: localhost:5900"
+    echo "    --use-snap-settings   Override command line options with"
+    echo "                          snap configurations"
     echo "    --cert CERT           Path to combined cert/key file"
     echo "                          Default: self.pem"
     echo "    --web WEB             Path to web files (e.g. vnc.html)"
@@ -32,12 +34,15 @@ NAME="$(basename $0)"
 REAL_NAME="$(readlink -f $0)"
 HERE="$(cd "$(dirname "$REAL_NAME")" && pwd)"
 PORT="6080"
+USE_SNAP_SETTINGS=""
 VNC_DEST="localhost:5900"
+VNC_DEST_DEFAULT="localhost:5900"
 CERT=""
 WEB=""
 proxy_pid=""
 SSLONLY=""
 RECORD_ARG=""
+EXTRA_ARGS=--auth-plugin=ssh_auth.ssh_auth.HTTPAuthWithSsh --heartbeat=5 --auto-pong
 
 die() {
     echo "$*"
@@ -61,6 +66,7 @@ while [ "$*" ]; do
     param=$1; shift; OPTARG=$1
     case $param in
     --listen)  PORT="${OPTARG}"; shift            ;;
+    --use-snap-settings) USE_SNAP_SETTINGS="1"    ;;
     --vnc)     VNC_DEST="${OPTARG}"; shift        ;;
     --cert)    CERT="${OPTARG}"; shift            ;;
     --web)     WEB="${OPTARG}"; shift            ;;
@@ -71,6 +77,10 @@ while [ "$*" ]; do
     *) break                                      ;;
     esac
 done
+
+if [ "${USE_SNAP_SETTINGS}" == "1" ] && [ "$(snapctl get use-default-vnc-port)" == "yes" ]; then
+    VNC_DEST="${VNC_DEST_DEFAULT}"
+fi
 
 # Sanity checks
 if bash -c "exec 7<>/dev/tcp/localhost/${PORT}" &> /dev/null; then
