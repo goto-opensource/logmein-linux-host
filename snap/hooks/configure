@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 DEPLOY_CODE=$(snapctl get deploy-code)
 ENABLE_VNC=$(snapctl get enable-vnc)
