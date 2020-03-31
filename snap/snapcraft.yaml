@@ -24,9 +24,6 @@ parts:
       - libssh2-1-dev
       - libssl-dev
       - zlib1g-dev
-    override-prime: |
-      snapcraftctl prime
-      cp $SNAPCRAFT_PROJECT_DIR/setup-vnc.sh $SNAPCRAFT_PRIME/
   reverse-proxy:
     source: reverse-proxy/
     plugin: nodejs
@@ -76,6 +73,7 @@ parts:
     plugin: dump
     source: ./remctrl/scripts
     organize:
+      'setup-vnc.sh': setup-vnc.sh
       '*': scripts/
 
 apps:
@@ -102,14 +100,14 @@ apps:
   novnc:
     # The vnc server at localhost:23826 can be overriden if the "use-default-vnc-port" snap config is set to "yes", 
     # so localhost:5900 will be used in this case.
-    command: websockify-custom/launch.sh --use-snap-settings --vnc localhost:23826 --listen localhost:23825 --web $SNAP/noVNC-branding --cert $SNAP_COMMON/self.pem
+    command: websockify-custom/launch.sh --use-snap-settings --vnc localhost:23826 --listen 23825 --web $SNAP/noVNC-branding --cert $SNAP_COMMON/self.pem
     daemon: simple
     restart-condition: always
     environment:
         PYTHONPATH: ${PYTHONPATH}:${SNAP}/websockify-custom
     plugs: [ network, network-bind, process-control ]
   novnc-login:
-    command: websockify-custom/launch.sh --vnc localhost:23824 --listen localhost:23823 --web $SNAP/noVNC-branding --cert $SNAP_COMMON/self.pem
+    command: websockify-custom/launch.sh --vnc localhost:23824 --listen 23823 --web $SNAP/noVNC-branding --cert $SNAP_COMMON/self.pem
     daemon: simple
     restart-condition: always
     environment:

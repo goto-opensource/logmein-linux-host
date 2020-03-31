@@ -31,12 +31,25 @@ Use the **Installation Link** or the deployment code itself:
 sudo snap set logmein-host 'deploy-code=<install link>'
 ```
 
+Plase make sure that SSH server is installed on your computer:
+```sh
+sudo apt install openssh-server
+```
+
 ### Enable the remote desktop control feature
+
+This feature is under development. To get the current state you have to switch to the "edge" channel:
+
+```sh
+sudo snap refresh --edge logmein-host
+```
 
 You can enable and configure the VNC-based remote desktop control with the following:
 ```sh
 sudo /snap/logmein/current/setup-vnc.sh --install
 ```
+
+**Please note that you have to restart your computer after the configuration.**
 
 The snap package contains a pre-installed `x11vnc` server. However, on some systems where there is another VNC server
 installed, the built-in x11vnc server can be replaced. This case can be detected during the configuration or can be forced with the `--use-default-vnc-port` parameter.
@@ -56,6 +69,15 @@ Setting up the LogMeIn VNC module.
 
 pi@raspberrypi:~ $ sudo /snap/logmein-host/current/setup-vnc.sh --install
 It seems you have a VNC server running on localhost:5900. Would you like to use that? [yes/no] yes
+```
+
+#### Limitations
+You have to disable Wayland display manager to let it work. To do so edit `/etc/gdm3/custom.conf` and set `WaylandEnable=false`:
+
+```
+[daemon]
+# Uncoment the line below to force the login screen to use Xorg
+WaylandEnable=false
 ```
 
 ### Contribute to `logmein-host`
