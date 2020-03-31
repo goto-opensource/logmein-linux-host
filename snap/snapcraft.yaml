@@ -24,6 +24,9 @@ parts:
       - libssh2-1-dev
       - libssl-dev
       - zlib1g-dev
+    override-prime: |
+      snapcraftctl prime
+      cp $SNAPCRAFT_PROJECT_DIR/setup-vnc.sh $SNAPCRAFT_PRIME/
   reverse-proxy:
     source: reverse-proxy/
     plugin: nodejs
@@ -73,7 +76,6 @@ parts:
     plugin: dump
     source: ./remctrl/scripts
     organize:
-      'setup-vnc.sh': setup-vnc.sh
       '*': scripts/
 
 apps:
