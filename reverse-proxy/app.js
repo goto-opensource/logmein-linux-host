@@ -6,11 +6,25 @@ var http = require('http'),
     cookieParser = require('cookie-parser'),
     crypto = require('crypto'),
     path = require('path'),
-    tcpPortUsed = require('tcp-port-used');
+    tcpPortUsed = require('tcp-port-used'),
+    execSync = require('child_process').execSync;
 
 httpProxy.prototype.onError = function (err) {
   console.error("Error during connection:", err.code);
 }
+
+var port = function() {
+  try {
+    const useDefaultVncPort = execSync("snapctl get use-default-vnc-port 2>/dev/null").toString().trim();
+    if (useDefaultVncPort === "yes") {
+      return 5900;
+    }  
+  }
+  catch(e) {}
+
+  return 23826;
+}();
+console.log("Using port", port, "for vnc server");
 
 var app = express();
 var http = require('http');
@@ -52,7 +66,7 @@ app.post('/xterm*', function(req, res) {
 });
 app.get('/*', function(req, res) {
   console.log("GET request for remctrl", req.url);
-  tcpPortUsed.check(23826, "127.0.0.1")
+  tcpPortUsed.check(port, "127.0.0.1")
   .then(function(inUse) {
     if (inUse) {
       rcProxy.web(req, res, {});
@@ -80,7 +94,7 @@ server.on('upgrade', function (req, socket, head) {
     console.log("Upgrade request for xterm", req.url);
     xtermProxy.ws(req, socket, head);
   } else {
-    tcpPortUsed.check(23826, "127.0.0.1")
+    tcpPortUsed.check(port, "127.0.0.1")
     .then(function(inUse) {
       if (inUse) {
         console.log("Upgrade request for remctrl (rc)", req.url);
