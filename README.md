@@ -31,6 +31,33 @@ Use the **Installation Link** or the deployment code itself:
 sudo snap set logmein-host 'deploy-code=<install link>'
 ```
 
+### Enable the remote desktop control feature
+
+You can enable and configure the VNC-based remote desktop control with the following:
+```sh
+sudo /snap/logmein/current/setup-vnc.sh --install
+```
+
+The snap package contains a pre-installed `x11vnc` server. However, on some systems where there is another VNC server
+installed, the built-in x11vnc server can be replaced. This case can be detected during the configuration or can be forced with the `--use-default-vnc-port` parameter.
+
+```sh
+pi@raspberrypi:~ $ /snap/logmein-host/current/setup-vnc.sh --help
+Usage: setup-vnc.sh [--install | --uninstall] [--use-default-vnc-port]
+
+Setting up the LogMeIn VNC module.
+
+    --install               Installs the necessary services and
+                            configures the parameters
+    --uninstall             Removes the services and all the
+                            configuration
+    --use-default-vnc-port  Use VNC server running at
+                            localhost:5900
+
+pi@raspberrypi:~ $ sudo /snap/logmein-host/current/setup-vnc.sh --install
+It seems you have a VNC server running on localhost:5900. Would you like to use that? [yes/no] yes
+```
+
 ### Contribute to `logmein-host`
 
 Read the [development guide](DEVELOPMENT.md) if you're interested in helping out.

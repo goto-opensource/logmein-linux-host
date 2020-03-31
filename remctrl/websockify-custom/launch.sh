@@ -42,7 +42,7 @@ WEB=""
 proxy_pid=""
 SSLONLY=""
 RECORD_ARG=""
-EXTRA_ARGS=--auth-plugin=ssh_auth.ssh_auth.HTTPAuthWithSsh --heartbeat=5 --auto-pong
+EXTRA_ARGS="--auth-plugin=ssh_auth.ssh_auth.HTTPAuthWithSsh --heartbeat=5 --auto-pong"
 
 die() {
     echo "$*"
@@ -158,7 +158,7 @@ fi
 
 echo "Starting webserver and WebSockets proxy on port ${PORT}"
 #${HERE}/websockify --web ${WEB} ${CERT:+--cert ${CERT}} ${PORT} ${VNC_DEST} &
-${WEBSOCKIFY} ${SSLONLY} --web ${WEB} ${CERT:+--cert ${CERT}} ${PORT} ${VNC_DEST} ${RECORD_ARG} ${EXTRA_ARGS} &
+${WEBSOCKIFY} ${SSLONLY} --web ${WEB} ${CERT:+--cert ${CERT}} ${RECORD_ARG} ${EXTRA_ARGS} ${PORT} ${VNC_DEST} &
 proxy_pid="$!"
 sleep 1
 if ! ps -p ${proxy_pid} >/dev/null; then
