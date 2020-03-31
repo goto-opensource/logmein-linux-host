@@ -21,4 +21,4 @@
             $SNAP/usr/bin/x11vnc -env FD_XDM=1 -loop -forever -bg -rfbport "${PORT}" -xkb -noxrecord -noxfixes -noxdamage -shared -norc -display :0 -localhost -auth "${XAUTHORITY}"
         done
     fi
-) 2>&1 | logger -t logmein-rc --id=$$
+) 2>&1 | logger -t logmein-rc 
