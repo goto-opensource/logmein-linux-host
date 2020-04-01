@@ -24,14 +24,14 @@ sudo snap install logmein-host
 5.  On the _Deploy Installation Package_ page, copy the **Installation Link**.  
     Example: `https://secure.logmein.com/i?l=en&c=01_bma2ecmmg4coyxou9oo6yhhvw0ewi3estniee`
 
-**Register the host in the LogMeIn Central**
+**Register the host in LogMeIn Central**
 
 Use the **Installation Link** or the deployment code itself:
 ```sh
 sudo snap set logmein-host 'deploy-code=<install link>'
 ```
 
-Plase make sure that SSH server is installed on your computer:
+Make sure that SSH server is installed on your computer:
 ```sh
 sudo apt install openssh-server
 ```
@@ -49,10 +49,10 @@ You can enable and configure the VNC-based remote desktop control with the follo
 sudo /snap/logmein/current/setup-vnc.sh --install
 ```
 
-**Please note that you have to restart your computer after the configuration.**
+**Note:** You must restart your computer after the configuring the feature.
 
 The snap package contains a pre-installed `x11vnc` server. However, on some systems where there is another VNC server
-installed, the built-in x11vnc server can be replaced. This case can be detected during the configuration or can be forced with the `--use-default-vnc-port` parameter.
+installed, the built-in x11vnc server can be replaced. This can be detected during the configuration or can be forced with the `--use-default-vnc-port` parameter.
 
 ```sh
 pi@raspberrypi:~ $ /snap/logmein-host/current/setup-vnc.sh --help
@@ -72,7 +72,7 @@ It seems you have a VNC server running on localhost:5900. Would you like to use 
 ```
 
 #### Limitations
-You have to disable Wayland display manager to let it work. To do so edit `/etc/gdm3/custom.conf` and set `WaylandEnable=false`:
+You must disable _Wayland display manager_. To do so edit `/etc/gdm3/custom.conf` and set `WaylandEnable=false`:
 
 ```
 [daemon]
