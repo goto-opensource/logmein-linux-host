@@ -49,7 +49,7 @@ You can enable and configure the VNC-based remote desktop control with the follo
 sudo /snap/logmein/current/setup-vnc.sh --install
 ```
 
-**Note:** You must restart your computer after the configuring the feature.
+**Note:** You must restart your computer after configuring the feature.
 
 The snap package contains a pre-installed `x11vnc` server. However, on some systems where there is another VNC server
 installed, the built-in x11vnc server can be replaced. This can be detected during the configuration or can be forced with the `--use-default-vnc-port` parameter.
