@@ -15,7 +15,7 @@
         XAUTHORITY=""
         while [ -z "${XAUTHORITY}" ]; do
             sleep 1
-            XAUTHORITY=$(ps axeo euid,comm,args | awk '{ if ($1< 1000) {print $0} }' | egrep -o 'XAUTHORITY=\S+' | head -1 | awk -F= '{print $2}')
+            XAUTHORITY=$(ps axeo euid,comm,args | awk '{ if ($1< 1000) {print $0} }' | egrep -o 'XAUTHORITY=\S+' | grep -v grep | head -1 | awk -F= '{print $2}')
         done    
         while [ 1 ]; do
             $SNAP/usr/bin/x11vnc -env FD_XDM=1 -loop -forever -bg -rfbport "${PORT}" -xkb -noxrecord -noxfixes -noxdamage -shared -norc -display :0 -localhost -auth "${XAUTHORITY}"
