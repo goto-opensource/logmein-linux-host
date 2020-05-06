@@ -46,7 +46,7 @@ sudo snap refresh --edge logmein-host
 
 You can enable and configure the VNC-based remote desktop control with the following:
 ```sh
-sudo /snap/logmein/current/setup-vnc.sh --install
+sudo /snap/logmein-host/current/setup-vnc.sh --install
 ```
 
 **Note:** You must restart your computer after configuring the feature.
