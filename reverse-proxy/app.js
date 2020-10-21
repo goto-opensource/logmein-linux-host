@@ -5,10 +5,34 @@ var http = require('http'),
     express = require('express'),
     cookieParser = require('cookie-parser'),
     crypto = require('crypto'),
-    path = require('path');
+    path = require('path'),
+    execSync = require('child_process').execSync;
 
 httpProxy.prototype.onError = function (err) {
   console.error("Error during connection:", err.code);
+}
+
+function setCustomHeaders(res, term_name) {
+  const snap_version = process.env.SNAP_VERSION || "develop"
+  const snap_revision = process.env.SNAP_REVISION || "develop"
+  const host_install_source = "snap"
+  const os_name = "Linux"
+  var os_arch = "unknown"
+  try {
+    os_arch = execSync("hostnamectl 2>/dev/null | awk -F': ' '/Architecture/ { print $2 } ' 2>/dev/null").toString().trim();
+  }
+  catch (e) {}
+  var distro_version = "unknown"
+  try {
+    distro_version = execSync("hostnamectl 2>/dev/null | awk -F': ' '/Operating System/ { print $2 } ' 2>/dev/null").toString().trim();
+  }
+  catch (e) {}
+
+  res.append("lmi-host-version", snap_version + " " + host_install_source + "." + snap_revision)
+  res.append("lmi-term-name", term_name)
+  res.append("lmi-os-name", os_name)
+  res.append("lmi-os-arch", os_arch)
+  res.append("lmi-os-version", distro_version)
 }
 
 var app = express();
@@ -31,6 +55,7 @@ var proxy2 = httpProxy.createProxyServer({ target: 'http://localhost:23822', ssl
 
 app.get('/term*', function(req, res) {
   console.log("GET request for term", req.url);
+  setCustomHeaders(res, "pytty");
   proxy1.web(req, res, {});
 });
 app.post('/term*', function(req, res) {
@@ -39,6 +64,7 @@ app.post('/term*', function(req, res) {
 });
 app.get('/xterm*', function(req, res) {
   console.log("GET request for xterm", req.url);
+  setCustomHeaders(res, "wetty");
   proxy2.web(req, res, {});
 });
 app.post('/xterm*', function(req, res) {

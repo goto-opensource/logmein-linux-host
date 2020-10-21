@@ -53,7 +53,7 @@ sshCommand = \
             echo -n \"localhost login: \"
             read username
         done
-        ssh -l \"${username}\" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+        ssh -l \"${username}\" -F /dev/null -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
             -o PreferredAuthentications=password,keyboard-interactive localhost'
     """
 # To simplify the testing:

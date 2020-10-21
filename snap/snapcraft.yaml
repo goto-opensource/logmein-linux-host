@@ -1,5 +1,5 @@
 name: logmein-host
-version: '1.1.0'
+version: '1.1.1'
 summary: The LogMeIn Host Software (Beta) for Linux # 79 char long summary
 icon: snap/gui/icon.png
 base: core18
