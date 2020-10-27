@@ -42,7 +42,7 @@ import uuid
 
 from tornado.options import define, options
 
-define("port", default=23821, help="run on the given port", type=int)
+define("port", default=23827, help="run on the given port", type=int)
 define("syslog", default=False, help="use syslog for logging instead of stderr", type=bool)
 
 MAX_WORKERS = 4
