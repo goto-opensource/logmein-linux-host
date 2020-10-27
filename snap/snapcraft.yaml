@@ -49,4 +49,4 @@ apps:
     command: reverse-proxy
     daemon: simple
     restart-condition: always
-    plugs: [ network, network-bind ]
+    plugs: [ network, network-bind, process-control, hostname-control ]
