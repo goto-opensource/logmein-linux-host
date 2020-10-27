@@ -19,12 +19,12 @@ function setCustomHeaders(res, term_name) {
   const os_name = "Linux"
   var os_arch = "unknown"
   try {
-    os_arch = execSync("hostnamectl 2>/dev/null | awk -F': ' '/Architecture/ { print $2 } ' 2>/dev/null").toString().trim();
+    os_arch = execSync("uname -m 2>/dev/null").toString().trim();
   }
   catch (e) {}
   var distro_version = "unknown"
   try {
-    distro_version = execSync("hostnamectl 2>/dev/null | awk -F': ' '/Operating System/ { print $2 } ' 2>/dev/null").toString().trim();
+    distro_version = execSync("(hostnamectl 2>/dev/null || echo \"Operating System: $(uname -r -v 2>/dev/null)\") | awk -F': ' '/Operating System/ { print $2 } ' 2>/dev/null").toString().trim();
   }
   catch (e) {}
 
