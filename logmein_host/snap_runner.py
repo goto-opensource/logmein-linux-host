@@ -44,6 +44,12 @@ def main():
     config.globalLicenseFile = "{}/license.dat".format(licensePath)
     config.osSpec = 987168779
 
+    p = subprocess.Popen(["snapctl", "get", "homesite"], stdout=subprocess.PIPE)
+    config.homeSite = p.stdout.read().decode().rstrip()
+    retval = p.wait()
+    if retval != 0 or config.homeSite == "":
+        config.homeSite = "secure.logmein.com"
+
     p = subprocess.Popen(["snapctl", "get", "deploy-code"], stdout=subprocess.PIPE)
     deploy_code = p.stdout.read().decode().rstrip()
     retval = p.wait()
