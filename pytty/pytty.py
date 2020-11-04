@@ -42,7 +42,7 @@ import uuid
 
 from tornado.options import define, options
 
-define("port", default=23821, help="run on the given port", type=int)
+define("port", default=23827, help="run on the given port", type=int)
 define("syslog", default=False, help="use syslog for logging instead of stderr", type=bool)
 
 MAX_WORKERS = 4
@@ -53,7 +53,7 @@ sshCommand = \
             echo -n \"localhost login: \"
             read username
         done
-        ssh -l \"${username}\" -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+        ssh -l \"${username}\" -F /dev/null -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
             -o PreferredAuthentications=password,keyboard-interactive localhost'
     """
 # To simplify the testing:

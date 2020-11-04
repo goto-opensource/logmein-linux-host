@@ -31,12 +31,24 @@ from .logmein_host import Config, Host, Register
 
 def main():
     config = Config()
+
+    p = subprocess.Popen(["snapctl", "get", "loglevel"], stdout=subprocess.PIPE)
+    config.loglevel = p.stdout.read().decode().rstrip()
+    p.wait()
+    if config.loglevel != "INFO" and config.loglevel != "DEBUG":
+        config.loglevel = "INFO"
+
     logging.basicConfig(level=config.getLoglevel(), format='%(threadName)s %(message)s')
 
     licensePath = os.getenv("SNAP_COMMON", "/var/lib/logmein-host")
-    licenseFile = "{}/license.dat".format(licensePath)
-    config.globalLicenseFile = os.getenv("LICENSE_FILE", licenseFile)
+    config.globalLicenseFile = "{}/license.dat".format(licensePath)
     config.osSpec = 987168779
+
+    p = subprocess.Popen(["snapctl", "get", "homesite"], stdout=subprocess.PIPE)
+    config.homeSite = p.stdout.read().decode().rstrip()
+    retval = p.wait()
+    if retval != 0 or config.homeSite == "":
+        config.homeSite = "secure.logmein.com"
 
     p = subprocess.Popen(["snapctl", "get", "deploy-code"], stdout=subprocess.PIPE)
     deploy_code = p.stdout.read().decode().rstrip()

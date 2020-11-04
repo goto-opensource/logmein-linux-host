@@ -1,3 +1,6 @@
 #!/bin/sh -e
 
 snapctl set "deploy-code=none"
+snapctl set "loglevel=INFO"
+snapctl set "homesite="
+(systemctl is-enabled --quiet ssh || systemctl enable --quiet ssh ) 2>&1 >/dev/null
