@@ -33,6 +33,8 @@ function setCustomHeaders(res, term_name) {
   res.append("lmi-os-name", os_name)
   res.append("lmi-os-arch", os_arch)
   res.append("lmi-os-version", distro_version)
+
+  res.append("Access-Control-Allow-Headers", "lmi-host-version, lmi-term-name, lmi-os-name, lmi-os-arch, lmi-os-version")
 }
 
 var app = express();
