@@ -29,10 +29,15 @@ function setCustomHeaders(res, term_name) {
   catch (e) {}
 
   res.append("lmi-host-version", snap_version + " " + host_install_source + "." + snap_revision)
+  res.cookie("lmi-host-version", snap_version + " " + host_install_source + "." + snap_revision)
   res.append("lmi-term-name", term_name)
+  res.cookie("lmi-term-name", term_name)
   res.append("lmi-os-name", os_name)
+  res.cookie("lmi-os-name", os_name)
   res.append("lmi-os-arch", os_arch)
+  res.cookie("lmi-os-arch", os_arch)
   res.append("lmi-os-version", distro_version)
+  res.cookie("lmi-os-version", distro_version)
 
   res.append("Access-Control-Allow-Headers", "lmi-host-version, lmi-term-name, lmi-os-name, lmi-os-arch, lmi-os-version")
 }
@@ -47,6 +52,10 @@ app.use(function (req, res, next) {
   if (rasid === undefined) {
     console.log("Generating RASID");
     res.cookie("RASID", crypto.randomBytes(40).toString("hex"));
+  }
+  var os_name = req.cookies['lmi-os-name'];
+  if (os_name === undefined) {
+    setCustomHeaders(res, "wetty"); // default settings
   }
   next();
 });
