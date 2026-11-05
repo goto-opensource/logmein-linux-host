@@ -2,7 +2,7 @@ name: logmein-host
 version: '1.1.1'
 summary: The LogMeIn Host Software (Beta) for Linux # 79 char long summary
 icon: snap/gui/icon.png
-base: core18
+base: core22
 description: |-
  LogMeIn allows you to access your computers from any device.
 
@@ -17,36 +17,38 @@ parts:
   pytty:
     plugin: python
     source: .
-    requirements: [ requirements.txt ]
+    python-requirements: [ requirements.txt ]
+    build-packages: [ build-essential, python3-dev ]
     stage-packages: [ openssh-client ]
   reverse-proxy:
     source: reverse-proxy/
-    plugin: nodejs
-    nodejs-version: 8.17.0
-    nodejs-package-manager: yarn
+    plugin: npm
+    npm-include-node: true
+    # wetty 1.3.x pulls node-pty 0.9.0 (native), which does not build on newer Node.
+    npm-node-version: 12.22.12
     build-environment:
       - npm_config_unsafe_perm: 'true'
-      - npm_config_prefer_online: 'true'
-    build-packages: [ git, gcc, g++, make, python, build-essential ]
+      - npm_config_python: /usr/bin/python3
+    build-packages: [ git, gcc, g++, make, python3, build-essential ]
 
 apps:
   pytty:
-    command: pytty
+    command: bin/pytty
     daemon: simple
     restart-condition: always
     plugs: [ network, network-bind, process-control ]
   wetty:
-    command: wetty --port 23822 --title LogMeIn --base /xterm/ --host 127.0.0.1 --forcessh
+    command: bin/wetty --port 23822 --title LogMeIn --base /xterm/ --host 127.0.0.1 --forcessh
     daemon: simple
     restart-condition: always
     plugs: [ network, network-bind, process-control ]
   logmein-host:
-    command: logmein_host
+    command: bin/logmein_host
     daemon: simple
     restart-condition: always
     plugs: [ network, network-bind, process-control ]
   reverse-proxy:
-    command: reverse-proxy
+    command: bin/reverse-proxy
     daemon: simple
     restart-condition: always
     plugs: [ network, network-bind, process-control, hostname-control ]
