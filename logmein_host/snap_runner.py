@@ -27,7 +27,18 @@ import os
 import sys
 import subprocess
 import time
+import socket
 from .logmein_host import Config, Host, Register
+
+def warnIfSshUnreachable():
+    """ The web terminal logs in with ssh to localhost, so an SSH server must be running on the host. """
+    try:
+        with socket.create_connection(("localhost", 22), timeout=3):
+            pass
+    except OSError:
+        logging.warning("No SSH server is reachable on localhost:22. "
+                        "The web terminal needs one to log in, please install and start it "
+                        "(e.g. 'sudo apt install openssh-server').")
 
 def main():
     config = Config()
@@ -70,4 +81,5 @@ def main():
         subprocess.run(["snapctl", "set", "deploy-code=SAVED"])
 
     config.parseLicenseFile(False)
+    warnIfSshUnreachable()
     Host.runForever(config)

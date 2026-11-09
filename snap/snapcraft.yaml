@@ -8,6 +8,8 @@ description: |-
 
  You can connect to a Linux host, in an web-based secure shell and it allows you to send commands to the host computer.
 
+ Requirement: the web-based shell logs in with SSH to the host itself, so an SSH server (e.g. openssh-server) must be installed and running on the computer.
+
  For more information on LogMeIn for Linux and how to attach your host to your account, try the developer website.
 
 grade: stable # must be 'stable' to release into candidate/stable channels
