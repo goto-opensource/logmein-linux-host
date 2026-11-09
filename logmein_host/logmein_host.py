@@ -160,7 +160,7 @@ class AESCipher(object):
         self.key = sha256(key.encode()).digest()
 
     def encrypt(self, raw):
-        raw = self._pad(raw)
+        raw = self._pad(raw.encode("utf-8"))
         iv = os.urandom(AES.block_size)
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         return b64encode(iv + cipher.encrypt(raw))
@@ -171,8 +171,9 @@ class AESCipher(object):
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
 
-    def _pad(self, s):
-        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+    def _pad(self, s: bytes) -> bytes:
+        n = self.bs - len(s) % self.bs
+        return s + bytes([n]) * n
 
     @staticmethod
     def _unpad(s):
@@ -538,12 +539,7 @@ class Register(object):
     def __saveLicenseFile(self, data: str):
         if os.getuid() == 0:
             licenseFile = self.config.globalLicenseFile
-            try:
-                os.makedirs(os.path.dirname(self.config.globalLicenseFile), 0o700)
-            except OSError as e:
-                if e.errno != os.errno.EEXIST:
-                    raise
-                pass
+            os.makedirs(os.path.dirname(self.config.globalLicenseFile), 0o700, exist_ok=True)
         else:
             licenseFile = "./license.dat"
         try:
