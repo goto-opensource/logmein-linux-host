@@ -34,6 +34,7 @@ import socket, ssl, pprint
 import threading
 import time
 import select
+import random
 from multiprocessing import Queue
 import multiprocessing
 from socket import gethostname
@@ -44,6 +45,7 @@ from urllib.request import Request, urlopen
 import urllib.parse
 from contextlib import suppress
 from Crypto.Cipher import AES
+import dns.resolver
 
 
 class Config(object):
@@ -61,12 +63,23 @@ class Config(object):
         # Default port of the web terminal/reverse proxy
         self.port = os.getenv("TERM_PORT", 23820)
 
+        # Connection and gateway selection
+        self.networkTimeout = 60
+        self.connectionLostTimeout = 60
+        self.retryTimeout = 30
+        self.dnsTimeout = 30
+        self.gatewayDns = "logmein-gateway.com"
+        self.gatewayIpMask = 0xFFFFFF00
+        self.gatewayIpPrefix = 0xD8DB7200
+        self.allowedDomains = ("logmein.com", "3amlabs.net")
+        self.forcedGateway = ""
+        self.forcedGatewayMaxFailures = 5
+
         # Misc
         self.hostName = gethostname()
         self.versionNum = 12345
         self.prevHostID = 1025570359
         self.idleTimeout = 10
-        self.retryTimeout = 30
         self.globalHostIdFile = "/data/{0}.hostid".format(gethostname())
         self.authCode = ""
         self.licenseID = ""
@@ -103,9 +116,22 @@ class Config(object):
         """
         return "2018-01-01 00:00:00"
 
+    def isAllowedHost(self, name: str) -> bool:
+        """ True if the name is one of the allowed domains or a host under them """
+        return any(name == domain or (name.endswith("." + domain) and name != "." + domain) for domain in self.allowedDomains)
+
+    def setForcedGateway(self, gateway: str):
+        """ Forced gateway host name, empty or "auto" means automatic gateway selection """
+        gateway = gateway.strip().lower()
+        if gateway == "auto":
+            gateway = ""
+        if gateway and not self.isAllowedHost(gateway):
+            log.error("Invalid gateway: {}, using automatic gateway selection".format(gateway))
+            gateway = ""
+        self.forcedGateway = gateway
+
     def verifyConfig(self):
-        if not self.homeSite.endswith("logmein.com") \
-                and not self.homeSite.endswith("3amlabs.net"):
+        if not self.isAllowedHost(self.homeSite):
             print("The homesite must be under the \"logmein.com\" or \"3amlabs.net\" domain. " \
                     "Current configuration: HOMESITE={}".format(self.homeSite))
             print("Exiting...")
@@ -138,6 +164,8 @@ class Config(object):
             elif line.startswith("HOMESITE:"):
                 # Overwriting config value!
                 self.homeSite = line[9:]
+
+        self.verifyConfig()
 
     def getLoglevel(self) -> int:
         """ Maps the loglevel names to loglevels """
@@ -180,39 +208,130 @@ class AESCipher(object):
         return s[:-ord(s[len(s)-1:])]
 
 
+class GatewaySelector(object):
+    """Selecting the gateway: the forced one or a weighted random one from DNS / homesite list"""
+    def __init__(self, config):
+        self.config = config
+        self.forced = False
+        self.forcedFailures = 0
+
+    @staticmethod
+    def weight(weight: str) -> int:
+        """ Weight of a gateway, 1 if it is invalid or 0 """
+        try:
+            return max(int(weight), 1)
+        except ValueError:
+            return 1
+
+    @staticmethod
+    def parseTxtRecord(txt: str) -> list:
+        """ (host, weight) list from the TXT record of the data center """
+        marker = txt.rfind("__")
+        if marker < 0:
+            raise ValueError("Unknown TXT record: {}".format(txt))
+        gateways = []
+        for item in txt[marker + 2:].split(";"):
+            host, _, weight = item.strip().partition("=")
+            if host:
+                gateways.append((host, GatewaySelector.weight(weight)))
+        return gateways
+
+    def getFromDns(self) -> list:
+        """ (host, weight) list of the data center from DNS, empty list on error """
+        try:
+            resolver = dns.resolver.Resolver()
+            deadline = time.monotonic() + self.config.dnsTimeout
+            name = "data-center." + self.config.gatewayDns
+            answer = resolver.resolve(name, "A", lifetime=self.config.dnsTimeout)
+            ip = int.from_bytes(socket.inet_aton(answer[0].address), "big")
+            if (ip & self.config.gatewayIpMask) != self.config.gatewayIpPrefix:
+                raise ValueError("{} points to invalid IP address: 0x{:08x}".format(name, ip))
+
+            name = "list.{}.{}".format(ip & 0xFF, self.config.gatewayDns)
+            answer = resolver.resolve(name, "TXT", lifetime=deadline - time.monotonic())
+            gateways = [x for x in self.parseTxtRecord(b"".join(answer[0].strings).decode())
+                        if self.config.isAllowedHost(x[0])]
+            if not gateways:
+                raise ValueError("No usable gateway in {}".format(name))
+        except Exception as e:
+            log.warning("Could not get the gateway list from DNS: {}".format(e))
+            return []
+
+        log.info("Got {} gateways via DNS".format(len(gateways)))
+        return gateways
+
+    def getFromHomeSite(self) -> list:
+        """ (host, weight) list from the homesite """
+        query = "/myrahost/list.aspx?weighed=1&os=linux&buildnumber=%d" % self.config.versionNum
+        conn = http.client.HTTPSConnection(self.config.homeSite, 443, timeout=self.config.networkTimeout, context=ssl.create_default_context())
+
+        log.info("Getting gateway list from {}".format(self.config.homeSite))
+        headers = {"Content-type": "application/x-www-form-urlencoded",
+                "Accept": "text/plain"}
+        try:
+            conn.request("GET", query, None, headers)
+            r1 = conn.getresponse()
+            if r1.status != 200:
+                raise ValueError("Could not get the gateway list: %d %s" % (r1.status, r1.reason))
+            data = r1.read()
+        finally:
+            conn.close()
+
+        # OK weight_1 host_1 ... 
+        lines = data.split(b"\0")[0].decode("ascii", "replace").splitlines()
+        if not lines or lines[0].strip() != "OK":
+            raise ValueError("Unknown gateway list response: %s" % data[:100])
+
+        gateways = []
+        for fields in (line.split() for line in lines[1:]):
+            if len(fields) >= 2 and self.config.isAllowedHost(fields[1]):
+                gateways.append((fields[1], self.weight(fields[0])))
+        if not gateways:
+            raise ValueError("No usable gateway in the gateway list")
+
+        log.info("Got {} gateways from {}".format(len(gateways), self.config.homeSite))
+        return gateways
+
+    def selectAutomatic(self) -> str:
+        """ Weighted random gateway from the DNS or the homesite list """
+        gateways = self.getFromDns() or self.getFromHomeSite()
+        hosts, weights = zip(*gateways)
+        gateway = random.choices(hosts, weights=weights)[0]
+        log.info("Selected gateway: {}".format(gateway))
+        return gateway
+
+    def select(self) -> str:
+        """ The forced gateway until it fails too many times, automatic selection otherwise """
+        self.forced = bool(self.config.forcedGateway) and self.forcedFailures < self.config.forcedGatewayMaxFailures
+        if self.forced:
+            log.info("Using forced gateway: {}".format(self.config.forcedGateway))
+            return self.config.forcedGateway
+        return self.selectAutomatic()
+
+    def connectionFinished(self, loggedIn: bool):
+        """ Counting the failures of the forced gateway, a successful LOGON resets them """
+        if loggedIn:
+            self.forcedFailures = 0
+        elif self.forced:
+            self.forcedFailures += 1
+            if self.forcedFailures == self.config.forcedGatewayMaxFailures:
+                log.warning("Forced gateway {} failed {} times, switching to automatic gateway selection".format(self.config.forcedGateway, self.forcedFailures))
+
+
 class Host(object):
     """Connecting host to LogMeIn"""
     def __init__(self, config):
         self.config = config
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.control_ssl = ssl.wrap_socket(self.sock)
+        self.control_ssl = None
         self.control_lock = threading.Lock()
         self.gateway = ""
+        self.loggedIn = False
 
-    def __del__(self):
-        self.control_ssl.close()
-
-    def setGatewayName(self):
-        query = "/myrahost/list.aspx?weighed=1&os=linux&buildnumber=%d" % self.config.versionNum
-        conn = http.client.HTTPSConnection(self.config.homeSite, 443)
-
-        log.info("Getting gateway list from {}".format(self.config.homeSite))
-        headers = {"Content-type": "application/x-www-form-urlencoded",
-                "Accept": "text/plain"}
-        conn.request("GET", query, None, headers)
-        r1 = conn.getresponse()
-        
-        if r1.status != 200:
-            log.error("Could not get the gateway list: %d %s" % (r1.status, r1.reason))
-            sys.exit(1)
-
-        # OK weight_1 host_1 ... 
-        gatewayList = [y for y in (x.strip() for x in r1.read().split()) if y] 
-        if len(gatewayList) < 3 or gatewayList[0] != b"OK":
-            raise ValueError("Unknown gateway list response: %s" % r1.read())
-
-        self.gateway = gatewayList[2].decode()
-        log.info("Gateway: {}".format(self.gateway))
+    def close(self):
+        if self.control_ssl is not None:
+            self.control_ssl.close()
+        self.sock.close()
 
     def connect(self):
         REQ_MSG_AUTH = (
@@ -236,6 +355,10 @@ class Host(object):
         ACK_MSG_OK = "OK"
         log.info("Connecting to gateway")
 
+        self.sock.settimeout(self.config.networkTimeout)
+        if hasattr(socket, "TCP_USER_TIMEOUT"):
+            self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_USER_TIMEOUT, self.config.connectionLostTimeout * 1000)
+        self.control_ssl = ssl.create_default_context().wrap_socket(self.sock, server_hostname=self.gateway)
         self.control_ssl.connect((self.gateway, 443))
 
         message = REQ_MSG_AUTH.format(self.config.compoundHostID(), 
@@ -263,6 +386,9 @@ class Host(object):
         if not data.decode().startswith(ACK_MSG_OK):
             log.error("Authentication failed")
             sys.exit(1)
+
+        self.control_ssl.settimeout(None)
+        self.loggedIn = True
         
         with self.control_lock:
             self.control_ssl.write(REQ_MSG_SUPPORT.format(self.config.idleTimeout).encode())
@@ -276,7 +402,7 @@ class Host(object):
     def __keepAlive(self):
         REQ_MSG_PING = "PING\n"
 
-        currThread = threading.currentThread()
+        currThread = threading.current_thread()
         while getattr(currThread, "do_run", True):
             log.debug("Keeping connection alive")
             try:
@@ -286,7 +412,7 @@ class Host(object):
                 if e.errno == socket.errno.EPIPE:
                     log.info("Detecting remote disconnect")
                 elif e.errno != socket.errno.ECONNRESET and e.errno != socket.errno.ECONNREFUSED:
-                    raise
+                    log.error("Unexpected error in keepAlive: {}".format(e))
                 log.info("Exiting keepAlive")
                 return
             except ValueError as e:
@@ -416,7 +542,8 @@ class Host(object):
 
         # create new connection
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_ssl = ssl.wrap_socket(sock)
+        sock.settimeout(self.config.networkTimeout)
+        client_ssl = ssl.create_default_context().wrap_socket(sock, server_hostname=self.gateway)
         client_ssl.connect((self.gateway, 443))
 
         # send datasock request
@@ -455,10 +582,10 @@ class Host(object):
         log.info("Exiting messageLoop")
         return
 
-    def run(self):
+    def run(self, gateway):
         try:
             keepAliveThread = None
-            self.setGatewayName()
+            self.gateway = gateway
             self.connect()
             self.saveHostId()
 
@@ -474,17 +601,18 @@ class Host(object):
 
     @staticmethod
     def runForever(config):
+        selector = GatewaySelector(config)
         while 1:
+            host = Host(config)
             try:
-                host = Host(config)
-                host.run()
-            except OSError as e:
-                if e.errno != socket.errno.ECONNRESET and e.errno != socket.errno.ECONNREFUSED:
-                    log.error(e.strerror)
-                    log.error("Retrying in %d seconds..." % config.retryTimeout)
-                    time.sleep(config.retryTimeout)        
-            except ValueError as e:
-                log.error(e.args)
+                host.run(selector.select())
+            except (OSError, ValueError, http.client.HTTPException) as e:
+                log.error("{}: {}".format(type(e).__name__, e))
+            finally:
+                host.close()
+
+            selector.connectionFinished(host.loggedIn)
+            if not host.loggedIn:
                 log.error("Retrying in %d seconds..." % config.retryTimeout)
                 time.sleep(config.retryTimeout)
 

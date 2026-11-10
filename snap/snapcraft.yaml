@@ -1,8 +1,8 @@
 name: logmein-host
-version: '1.1.1'
+version: '1.2.1'
 summary: The LogMeIn Host Software (Beta) for Linux # 79 char long summary
 icon: snap/gui/icon.png
-base: core22
+base: core24
 description: |-
  LogMeIn allows you to access your computers from any device.
 
@@ -31,7 +31,7 @@ parts:
     build-environment:
       - npm_config_unsafe_perm: 'true'
       - npm_config_python: /usr/bin/python3
-    build-packages: [ git, gcc, g++, make, python3, build-essential ]
+    build-packages: [ git, gcc, g++, make, python3, python3-setuptools, build-essential ]
 
 apps:
   pytty:

@@ -61,6 +61,11 @@ def main():
     if retval != 0 or config.homeSite == "":
         config.homeSite = "secure.logmein.com"
 
+    p = subprocess.Popen(["snapctl", "get", "gateway"], stdout=subprocess.PIPE)
+    gateway = p.stdout.read().decode().rstrip()
+    retval = p.wait()
+    config.setForcedGateway(gateway if retval == 0 else "")
+
     p = subprocess.Popen(["snapctl", "get", "deploy-code"], stdout=subprocess.PIPE)
     deploy_code = p.stdout.read().decode().rstrip()
     retval = p.wait()

@@ -52,6 +52,23 @@ Then run `logmein_host` which connects `pytty` to the LogMeIn gateways:
 $ python3 logmein_host/logmein_host.py 
 ```
 
+### Choosing the gateway (snap)
+By default the host selects a gateway automatically. To force a specific gateway:
+
+```sh
+$ sudo snap set logmein-host gateway=<gateway host name>
+```
+
+To switch back to automatic gateway selection:
+
+```sh
+$ sudo snap unset logmein-host gateway
+# or
+$ sudo snap set logmein-host gateway=auto
+```
+
+If logging in through the forced gateway fails 5 times in a row, the host switches to automatic gateway selection, and tries the forced gateway again only after the next disconnect.
+
 ### License
 Copyright (c) 2018 LogMeIn, Inc.
 

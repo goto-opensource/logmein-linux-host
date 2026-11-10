@@ -3,3 +3,4 @@
 snapctl set "deploy-code=none"
 snapctl set "loglevel=INFO"
 snapctl set "homesite="
+snapctl set "gateway="
