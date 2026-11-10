@@ -146,12 +146,12 @@ class Config(object):
             try:
                 with open("license.dat", "r") as f:
                     config = cipher.decrypt(f.read())
-                    log.debug("local config: %s" % config)
+                    log.debug("Using local license file")
             except FileNotFoundError:
                 try:
                     with open(self.globalLicenseFile, "r") as f:
                         config = cipher.decrypt(f.read())
-                        log.debug("global config: %s" % config)
+                        log.debug("Using global license file: %s" % self.globalLicenseFile)
                 except FileNotFoundError:
                     print("License file not found! Please register first.")
                     sys.exit(1)
@@ -353,7 +353,7 @@ class Host(object):
             "DBCMD\n"
         )
         ACK_MSG_OK = "OK"
-        log.info("Connecting to gateway")
+        log.info("Connecting to gateway: {}".format(self.gateway))
 
         self.sock.settimeout(self.config.networkTimeout)
         if hasattr(socket, "TCP_USER_TIMEOUT"):
@@ -371,7 +371,7 @@ class Host(object):
             self.config.lastBootTime(), 
             self.config.osType, 
             self.config.osSpec)
-        log.debug("Sending %s" % message)
+        log.debug("Sending %s" % message.replace("-AUTH:" + self.config.authCode, "-AUTH:***"))
         with self.control_lock:
             self.control_ssl.write(message.encode())
 
@@ -538,7 +538,7 @@ class Host(object):
         connectionId = buf.readline().rstrip()
 
         message = REQ_MSG_DATASOCK.format(self.hostId, hostAuth, connectionId)
-        log.debug("Sending %s" % message)
+        log.debug("Sending %s" % REQ_MSG_DATASOCK.format(self.hostId, "***", connectionId))
 
         # create new connection
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -575,7 +575,7 @@ class Host(object):
                 log.info("Receiving empty message")
                 break
             if data.decode().startswith(REQ_MSG_NEW_DATA):
-                log.debug("New data: %s" % data)
+                log.debug("New data socket request")
                 threading.Thread(target=self.__handleDataSock, args=[data]).start()
             elif not data.decode().startswith(REQ_MSG_PONG):
                 log.debug("[messageLoop] Message: %s" % data)
@@ -640,8 +640,9 @@ class Register(object):
             "cguid": ""
         }
         postData = urllib.parse.urlencode(data)
-        log.debug(data)
-        log.debug(postData)
+        masked = dict(data, deployid="***")
+        log.debug(masked)
+        log.debug(urllib.parse.urlencode(masked))
 
         request = Request(registerUrl, postData.encode())
         response = urlopen(request)
