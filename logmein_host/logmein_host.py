@@ -446,7 +446,7 @@ class Host(object):
 
         while not terminate or len(clientData) > 0 or len(targetHostData) > 0:
             log.debug("---------------------")
-            inputs = [clientSocket, targetHostSocket]
+            inputs = [] if terminate else [clientSocket, targetHostSocket]
             outputs = []
             
             if len(clientData) > 0:
@@ -465,6 +465,8 @@ class Host(object):
                 if inp == clientSocket:
                     try:
                         data = clientSocket.recv(4096)
+                        if data and clientSocket.pending() > 0:
+                            data += clientSocket.recv(clientSocket.pending())
                         if data != None:
                             if len(data) > 0:
                                 targetHostData += data
@@ -475,9 +477,12 @@ class Host(object):
                             else:
                                 terminate = True
                                 log.debug("terminating B")
-                    except Exception as e:
+                    except ssl.SSLWantReadError as e:
                         log.debug("exchangeData B {}".format(e))
                         break
+                    except Exception as e:
+                        log.debug("exchangeData B {}".format(e))
+                        terminate = True
                 elif inp == targetHostSocket:
                     try:
                         data = targetHostSocket.recv(8192)
@@ -491,7 +496,7 @@ class Host(object):
                                 log.debug("terminating C")
                     except Exception as e:
                         log.debug("exchangeData C {}".format(e))
-                        break
+                        terminate = True
                                             
             for out in outputsReady:
                 log.debug(f"out: {out} clientData: {len(clientData)} targetData: {len(targetHostData)}")
@@ -512,7 +517,7 @@ class Host(object):
                         targetHostData = targetHostData[bytesWritten:]
         
         if len(targetHostData) > 0:
-            clientSocket.sendall(targetHostData)
+            targetHostSocket.sendall(targetHostData)
             log.debug("Sent all remaining data to HOST.")
     
         if len(clientData) > 0:
@@ -562,8 +567,10 @@ class Host(object):
         return
 
     def messageLoop(self):
-        REQ_MSG_PONG = "PONG"
-        REQ_MSG_NEW_DATA = "REQDATASOCK"
+        REQ_MSG_PONG = b"PONG"
+        REQ_MSG_NEW_DATA = b"REQDATASOCK "
+        REQ_MSG_NEW_DATA_FULL = re.compile(rb"REQDATASOCK [^\n]*\n[^\n]*\n[^\n]*\n")
+        buf = b""
         while 1:
             try:
                 data = self.control_ssl.read()
@@ -574,11 +581,17 @@ class Host(object):
             if data == b"":
                 log.info("Receiving empty message")
                 break
-            if data.decode().startswith(REQ_MSG_NEW_DATA):
+            buf += data
+            end = 0
+            for m in REQ_MSG_NEW_DATA_FULL.finditer(buf):
                 log.debug("New data socket request")
-                threading.Thread(target=self.__handleDataSock, args=[data]).start()
-            elif not data.decode().startswith(REQ_MSG_PONG):
+                threading.Thread(target=self.__handleDataSock, args=[m.group()]).start()
+                end = m.end()
+            if REQ_MSG_NEW_DATA not in buf and not data.startswith(REQ_MSG_PONG):
                 log.debug("[messageLoop] Message: %s" % data)
+            buf = buf[end:]
+            start = buf.find(REQ_MSG_NEW_DATA)
+            buf = buf[start:] if start >= 0 else buf[buf.rfind(b"\n") + 1:]
         log.info("Exiting messageLoop")
         return
 
