@@ -88,6 +88,7 @@ class TermSocketHandler(tornado.websocket.WebSocketHandler):
     def initialize(self):
         logging.info("{} - handler initialize.".format(hex(id(self))))
         self.ssh_queue = tornado.queues.Queue()
+        self.io_loop = tornado.ioloop.IOLoop.current()
         self.executor = ThreadPoolExecutor(max_workers=MAX_WORKERS)
 
     def get_compression_options(self):
@@ -108,7 +109,7 @@ class TermSocketHandler(tornado.websocket.WebSocketHandler):
             if data == b"":
                 break
             decoded = data.decode("utf-8", "backslashreplace")
-            self.ssh_queue.put_nowait(decoded)
+            self.io_loop.add_callback(self.ssh_queue.put_nowait, decoded)
         logging.info("{} - run_ssh ended.".format(hex(id(self))))
 
 
