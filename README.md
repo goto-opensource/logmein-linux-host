@@ -12,7 +12,7 @@ Each Linux host is displayed like any other host in your Computers list. When yo
 
 An **SSH server** must be installed and running on the host (for example `sudo apt install openssh-server`). The web terminal logs in to `localhost` with *ssh* (password or keyboard-interactive authentication), so without it the connection from LogMeIn Central is refused. This applies to the snap package as well.
 
-Python version 3.4+ is required with some PyPi dependencies. To install the dependencies run the following after cloning this repository:
+Python version 3.10+ is required with some PyPi dependencies. To install the dependencies run the following after cloning this repository:
 
 ```sh
 $ pip3 install -r requirements.txt
