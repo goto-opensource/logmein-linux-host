@@ -67,6 +67,7 @@ class Config(object):
         self.networkTimeout = 60
         self.connectionLostTimeout = 60
         self.retryTimeout = 30
+        self.reconnectDelay = 5
         self.dnsTimeout = 30
         self.gatewayDns = "logmein-gateway.com"
         self.gatewayIpMask = 0xFFFFFF00
@@ -384,7 +385,7 @@ class Host(object):
         self.hostId = hostIdLine.rstrip()[7:]
 
         if not data.decode().startswith(ACK_MSG_OK):
-            raise ValueError("Authentication failed: {}".format(data.decode().split("\n")[0]))
+            raise ValueError("Gateway rejected the login: {}".format(data.decode().split("\n")[0]))
 
         self.control_ssl.settimeout(None)
         self.loggedIn = True
@@ -624,8 +625,9 @@ class Host(object):
                 host.close()
 
             selector.connectionFinished(host.loggedIn)
-            log.error("Connection to gateway {} ended, retrying in {} seconds...".format(host.gateway, config.retryTimeout))
-            time.sleep(config.retryTimeout)
+            delay = config.reconnectDelay if host.loggedIn else config.retryTimeout
+            log.warning("Connection to gateway {} ended, retrying in {} seconds...".format(host.gateway, delay))
+            time.sleep(delay)
 
             log.info("Restarting...")
         return
