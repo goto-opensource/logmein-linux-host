@@ -98,4 +98,4 @@ server.on('upgrade', function (req, socket, head) {
 
 app.use('/', express.static(path.join(__dirname, 'public')))
 
-server.listen(23820);
+server.listen(23820, '127.0.0.1');

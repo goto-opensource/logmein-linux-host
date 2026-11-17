@@ -1,3 +1,5 @@
-pexpect~=4.6.0
-tornado~=4.5.3
-pycrypto~=2.6.1
+pexpect>=4.9,<5
+tornado>=6.1,<7
+pycryptodome>=3.20,<4
+dnspython==2.9.2; python_version >= "3.11"
+dnspython==2.8.0; python_version < "3.11"

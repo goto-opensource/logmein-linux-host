@@ -2,6 +2,25 @@
 
 DEPLOY_CODE=$(snapctl get deploy-code)
 
+GATEWAY=$(snapctl get gateway || true)
+
+case "${GATEWAY}" in
+    *[!a-z0-9.-]*)
+        printf 'Invalid gateway "%s": only lowercase letters, digits, "." and "-" are allowed\n' "${GATEWAY}" >&2
+        exit 1
+        ;;
+    ""|auto|logmein.com|3amlabs.net|?*.logmein.com|?*.3amlabs.net)
+        ;;
+    *)
+        printf 'Invalid gateway "%s": it must be under logmein.com or 3amlabs.net\n' "${GATEWAY}" >&2
+        exit 1
+        ;;
+esac
+
+if [ "${DEPLOY_CODE}" = "SAVED" ]; then
+    snapctl restart ${SNAP_NAME}.logmein-host
+fi
+
 if [ "${DEPLOY_CODE}" != "none" ] && [ "${DEPLOY_CODE}" != "SAVED" ]; then
     snapctl start --enable ${SNAP_NAME}.pytty
     snapctl restart ${SNAP_NAME}.pytty

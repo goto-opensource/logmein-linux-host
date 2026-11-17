@@ -10,7 +10,9 @@ Each Linux host is displayed like any other host in your Computers list. When yo
 
 ### Requirements
 
-Python version 3.4+ is required with some PyPi dependencies. To install the dependencies run the following after cloning this repository:
+An **SSH server** must be installed and running on the host (for example `sudo apt install openssh-server`). The web terminal logs in to `localhost` with *ssh* (password or keyboard-interactive authentication), so without it the connection from LogMeIn Central is refused. This applies to the snap package as well.
+
+Python version 3.10+ is required with some PyPi dependencies. To install the dependencies run the following after cloning this repository:
 
 ```sh
 $ pip3 install -r requirements.txt
@@ -49,6 +51,23 @@ Then run `logmein_host` which connects `pytty` to the LogMeIn gateways:
 ```sh
 $ python3 logmein_host/logmein_host.py 
 ```
+
+### Choosing the gateway (snap)
+By default the host selects a gateway automatically. To force a specific gateway:
+
+```sh
+$ sudo snap set logmein-host gateway=<gateway host name>
+```
+
+To switch back to automatic gateway selection:
+
+```sh
+$ sudo snap unset logmein-host gateway
+# or
+$ sudo snap set logmein-host gateway=auto
+```
+
+If logging in through the forced gateway fails 5 times in a row, the host switches to automatic gateway selection, and tries the forced gateway again only after the next disconnect.
 
 ### License
 Copyright (c) 2018 LogMeIn, Inc.
