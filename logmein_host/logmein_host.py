@@ -68,6 +68,7 @@ class Config(object):
         self.connectionLostTimeout = 60
         self.retryTimeout = 30
         self.reconnectDelay = 5
+        self.reconnectJitter = 2
         self.maxRetryTimeout = 300
         self.retryJitter = 5
         self.dnsTimeout = 30
@@ -630,7 +631,7 @@ class Host(object):
             selector.connectionFinished(host.loggedIn)
             failures = 0 if host.loggedIn else failures + 1
             if host.loggedIn:
-                delay = config.reconnectDelay
+                delay = config.reconnectDelay + random.randint(-config.reconnectJitter, config.reconnectJitter)
             else:
                 delay = min(config.retryTimeout * failures + random.randint(-config.retryJitter, config.retryJitter), config.maxRetryTimeout)
             log.warning("Connection to gateway {} ended, retrying in {} seconds...".format(host.gateway, delay))
