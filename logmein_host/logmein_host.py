@@ -69,6 +69,7 @@ class Config(object):
         self.retryTimeout = 30
         self.reconnectDelay = 5
         self.maxRetryTimeout = 300
+        self.retryJitter = 5
         self.dnsTimeout = 30
         self.gatewayDns = "logmein-gateway.com"
         self.gatewayIpMask = 0xFFFFFF00
@@ -631,7 +632,7 @@ class Host(object):
             if host.loggedIn:
                 delay = config.reconnectDelay
             else:
-                delay = min(config.retryTimeout * failures, config.maxRetryTimeout)
+                delay = min(config.retryTimeout * failures + random.randint(-config.retryJitter, config.retryJitter), config.maxRetryTimeout)
             log.warning("Connection to gateway {} ended, retrying in {} seconds...".format(host.gateway, delay))
             time.sleep(delay)
 
