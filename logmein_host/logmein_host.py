@@ -68,6 +68,7 @@ class Config(object):
         self.connectionLostTimeout = 60
         self.retryTimeout = 30
         self.reconnectDelay = 5
+        self.maxRetryTimeout = 300
         self.dnsTimeout = 30
         self.gatewayDns = "logmein-gateway.com"
         self.gatewayIpMask = 0xFFFFFF00
@@ -615,6 +616,7 @@ class Host(object):
     @staticmethod
     def runForever(config):
         selector = GatewaySelector(config)
+        failures = 0
         while 1:
             host = Host(config)
             try:
@@ -625,7 +627,11 @@ class Host(object):
                 host.close()
 
             selector.connectionFinished(host.loggedIn)
-            delay = config.reconnectDelay if host.loggedIn else config.retryTimeout
+            failures = 0 if host.loggedIn else failures + 1
+            if host.loggedIn:
+                delay = config.reconnectDelay
+            else:
+                delay = min(config.retryTimeout * failures, config.maxRetryTimeout)
             log.warning("Connection to gateway {} ended, retrying in {} seconds...".format(host.gateway, delay))
             time.sleep(delay)
 
