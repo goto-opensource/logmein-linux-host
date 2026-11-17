@@ -384,8 +384,7 @@ class Host(object):
         self.hostId = hostIdLine.rstrip()[7:]
 
         if not data.decode().startswith(ACK_MSG_OK):
-            log.error("Authentication failed")
-            sys.exit(1)
+            raise ValueError("Authentication failed: {}".format(data.decode().split("\n")[0]))
 
         self.control_ssl.settimeout(None)
         self.loggedIn = True
@@ -625,9 +624,8 @@ class Host(object):
                 host.close()
 
             selector.connectionFinished(host.loggedIn)
-            if not host.loggedIn:
-                log.error("Retrying in %d seconds..." % config.retryTimeout)
-                time.sleep(config.retryTimeout)
+            log.error("Connection to gateway {} ended, retrying in {} seconds...".format(host.gateway, config.retryTimeout))
+            time.sleep(config.retryTimeout)
 
             log.info("Restarting...")
         return
